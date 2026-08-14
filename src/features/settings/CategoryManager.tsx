@@ -128,28 +128,31 @@ export function CategoryManager() {
   }
 
   return (
-    <GlassCard className="flex flex-col gap-6">
-      <div>
-        <p className="text-text-primary font-medium">Categories</p>
-        <p className="text-text-secondary text-sm">
-          Default categories can be archived but not renamed. Custom categories are fully editable.
-        </p>
-      </div>
+    <>
+      <GlassCard className="flex flex-col gap-6">
+        <div>
+          <p className="text-text-primary font-medium">Categories</p>
+          <p className="text-text-secondary text-sm">
+            Default categories can be archived but not renamed. Custom categories are fully
+            editable.
+          </p>
+        </div>
 
-      <CategoryGroup
-        title="Expense categories"
-        categories={categories.filter((c) => c.type === 'expense')}
-        onEdit={openEdit}
-        onToggleArchive={handleToggleArchive}
-        onNew={() => openNew('expense')}
-      />
-      <CategoryGroup
-        title="Income categories"
-        categories={categories.filter((c) => c.type === 'income')}
-        onEdit={openEdit}
-        onToggleArchive={handleToggleArchive}
-        onNew={() => openNew('income')}
-      />
+        <CategoryGroup
+          title="Expense categories"
+          categories={categories.filter((c) => c.type === 'expense')}
+          onEdit={openEdit}
+          onToggleArchive={handleToggleArchive}
+          onNew={() => openNew('expense')}
+        />
+        <CategoryGroup
+          title="Income categories"
+          categories={categories.filter((c) => c.type === 'income')}
+          onEdit={openEdit}
+          onToggleArchive={handleToggleArchive}
+          onNew={() => openNew('income')}
+        />
+      </GlassCard>
 
       <CategoryFormModal
         open={formOpen}
@@ -158,6 +161,6 @@ export function CategoryManager() {
         onClose={() => setFormOpen(false)}
         onSaved={refresh}
       />
-    </GlassCard>
+    </>
   )
 }

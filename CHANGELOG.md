@@ -24,6 +24,9 @@ All notable changes to this project are documented here, following [Keep a Chang
   - `formatCurrency`/`parseAmountToCents` in `lib/format`, with unit tests; 9 new Rust integration tests round-tripping every query module against a real temp SQLite DB (21 Rust tests total), plus a frontend smoke test.
   - New dependencies: `lucide-react` reused from Phase 1; `@hookform/resolvers` (glues the already-pinned React Hook Form + Zod together); `@tauri-apps/plugin-dialog` / `tauri-plugin-dialog` (native save dialog, required so CSV export only ever writes to a user-picked path); `sqlx`, `uuid`, `chrono`, `csv`, `thiserror` (Rust; typed queries, ID generation, due-date math, correct CSV escaping, structured errors).
 
+### Fixed
+- `ConfirmFixedExpenseModal` and `CategoryFormModal` were rendered as children of a `GlassCard`, whose `backdrop-filter` establishes a CSS containing block for `position: fixed` descendants — trapping both modals inside the card's own bounds instead of covering the viewport (found via manual exercise of the app, not caught by any automated test since jsdom doesn't apply real CSS layout). Both are now rendered as siblings after their `GlassCard`, matching every other modal in the app.
+
 <!--
 Template for future entries:
 
