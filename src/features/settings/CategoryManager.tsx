@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from 'react'
 import { Archive, ArchiveRestore, Pencil, Plus } from 'lucide-react'
+import { ConfirmDialog } from '../../components/ConfirmDialog'
 import { GlassCard } from '../../components/GlassCard'
 import { getCategoryIcon } from '../../lib/icons'
 import { listCategories, setCategoryArchived } from '../../lib/ipc/commands'
@@ -93,6 +94,7 @@ export function CategoryManager() {
   const [formOpen, setFormOpen] = useState(false)
   const [formType, setFormType] = useState<CategoryType>('expense')
   const [editing, setEditing] = useState<Category | null>(null)
+  const [archiving, setArchiving] = useState<Category | null>(null)
 
   const refresh = useCallback(() => {
     listCategories(undefined, true)
@@ -105,14 +107,30 @@ export function CategoryManager() {
     refresh()
   }, [refresh])
 
-  async function handleToggleArchive(category: Category) {
+  async function setArchived(category: Category, archived: boolean) {
     try {
-      await setCategoryArchived(category.id, !category.isArchived)
-      showToast(category.isArchived ? 'Category unarchived' : 'Category archived')
+      await setCategoryArchived(category.id, archived)
+      showToast(archived ? 'Category archived' : 'Category unarchived')
       refresh()
     } catch (error) {
       showToast(getErrorMessage(error), 'error')
     }
+  }
+
+  // Archiving hides the category from active pickers immediately, so it's
+  // guarded by a confirmation; unarchiving is purely additive and isn't.
+  function handleToggleArchive(category: Category) {
+    if (category.isArchived) {
+      setArchived(category, false)
+    } else {
+      setArchiving(category)
+    }
+  }
+
+  async function handleConfirmArchive() {
+    if (!archiving) return
+    await setArchived(archiving, true)
+    setArchiving(null)
   }
 
   function openNew(type: CategoryType) {
@@ -160,6 +178,19 @@ export function CategoryManager() {
         category={editing}
         onClose={() => setFormOpen(false)}
         onSaved={refresh}
+      />
+
+      <ConfirmDialog
+        open={archiving !== null}
+        title="Archive this category?"
+        description={
+          archiving
+            ? `${archiving.name} will be hidden from category pickers on new entries. Existing expenses and income already using it are kept.`
+            : ''
+        }
+        confirmLabel="Archive"
+        onConfirm={handleConfirmArchive}
+        onCancel={() => setArchiving(null)}
       />
     </>
   )

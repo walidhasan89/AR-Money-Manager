@@ -1,5 +1,6 @@
 import { AnimatePresence, motion } from 'framer-motion'
 import { useState } from 'react'
+import { useEscapeToClose } from '../lib/useEscapeToClose'
 
 interface ConfirmDialogProps {
   open: boolean
@@ -24,6 +25,8 @@ export function ConfirmDialog({
   onCancel,
 }: ConfirmDialogProps) {
   const [shake, setShake] = useState(false)
+
+  useEscapeToClose(open, onCancel)
 
   function handleBackdropClick() {
     setShake(true)

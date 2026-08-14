@@ -31,7 +31,7 @@ export function EntryFilterBar({ categories, filter, onChange }: EntryFilterBarP
   return (
     <div className="glass-card flex flex-col gap-3 p-4">
       <div className="flex flex-wrap items-center gap-3">
-        <div className="border-glass-border flex items-center gap-2 rounded-control border bg-black/10 px-3 py-2">
+        <div className="border-glass-border focus-within:border-accent-primary flex items-center gap-2 rounded-control border bg-black/10 px-3 py-2 transition-colors">
           <Search size={14} strokeWidth={1.75} className="text-text-secondary" aria-hidden />
           <input
             type="text"
@@ -46,7 +46,7 @@ export function EntryFilterBar({ categories, filter, onChange }: EntryFilterBarP
           type="date"
           value={filter.dateFrom ?? ''}
           onChange={(e) => onChange({ ...filter, dateFrom: e.target.value || undefined })}
-          className="border-glass-border text-text-primary rounded-control border bg-black/10 px-3 py-2 text-sm outline-none"
+          className="border-glass-border focus:border-accent-primary text-text-primary rounded-control border bg-black/10 px-3 py-2 text-sm outline-none transition-colors"
           aria-label="From date"
         />
         <span className="text-text-secondary text-sm">to</span>
@@ -54,7 +54,7 @@ export function EntryFilterBar({ categories, filter, onChange }: EntryFilterBarP
           type="date"
           value={filter.dateTo ?? ''}
           onChange={(e) => onChange({ ...filter, dateTo: e.target.value || undefined })}
-          className="border-glass-border text-text-primary rounded-control border bg-black/10 px-3 py-2 text-sm outline-none"
+          className="border-glass-border focus:border-accent-primary text-text-primary rounded-control border bg-black/10 px-3 py-2 text-sm outline-none transition-colors"
           aria-label="To date"
         />
 
@@ -68,7 +68,7 @@ export function EntryFilterBar({ categories, filter, onChange }: EntryFilterBarP
             onChange({ ...filter, minAmountCents: cents ?? undefined })
           }}
           placeholder="Min amount"
-          className="border-glass-border text-text-primary placeholder:text-text-secondary/50 w-28 rounded-control border bg-black/10 px-3 py-2 text-sm outline-none"
+          className="border-glass-border focus:border-accent-primary text-text-primary placeholder:text-text-secondary/50 w-28 rounded-control border bg-black/10 px-3 py-2 text-sm outline-none transition-colors"
         />
         <span className="text-text-secondary text-sm">–</span>
         <input
@@ -81,7 +81,7 @@ export function EntryFilterBar({ categories, filter, onChange }: EntryFilterBarP
             onChange({ ...filter, maxAmountCents: cents ?? undefined })
           }}
           placeholder="Max amount"
-          className="border-glass-border text-text-primary placeholder:text-text-secondary/50 w-28 rounded-control border bg-black/10 px-3 py-2 text-sm outline-none"
+          className="border-glass-border focus:border-accent-primary text-text-primary placeholder:text-text-secondary/50 w-28 rounded-control border bg-black/10 px-3 py-2 text-sm outline-none transition-colors"
         />
 
         {hasActiveFilters && (

@@ -10,6 +10,7 @@ import { createSavingsEntry } from '../../lib/ipc/commands'
 import { parseAmountToCents } from '../../lib/format/currency'
 import { getErrorMessage } from '../../lib/ipc/types'
 import type { Goal, SavingsEntryType } from '../../lib/ipc/types'
+import { useEscapeToClose } from '../../lib/useEscapeToClose'
 import { useDataEventsStore } from '../../store/dataEventsStore'
 import { useToastStore } from '../../store/toastStore'
 
@@ -66,6 +67,8 @@ function LogSavingsBody({
   })
   const goalId = useWatch({ control, name: 'goalId' })
   const selectedGoal = goals.find((g) => g.id === goalId)
+
+  useEscapeToClose(true, onClose)
 
   async function onSubmit(values: FormValues) {
     const cents = parseAmountToCents(values.amount)

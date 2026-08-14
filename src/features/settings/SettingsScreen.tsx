@@ -1,8 +1,9 @@
 import { useEffect, useState } from 'react'
 import { GlassCard } from '../../components/GlassCard'
-import { ThemeToggle } from '../../components/ThemeToggle'
+import { ThemePreferenceSelector } from '../../components/ThemePreferenceSelector'
 import { getAppVersion } from '../../lib/ipc/commands'
 import { CategoryManager } from './CategoryManager'
+import { ShortcutsReference } from './ShortcutsReference'
 
 export function SettingsScreen() {
   const [version, setVersion] = useState<string | null>(null)
@@ -20,9 +21,9 @@ export function SettingsScreen() {
         <div className="flex items-center justify-between pb-4">
           <div>
             <p className="text-text-primary font-medium">Theme</p>
-            <p className="text-text-secondary text-sm">Dark by default, switch anytime.</p>
+            <p className="text-text-secondary text-sm">Dark by default, or follow your OS.</p>
           </div>
-          <ThemeToggle />
+          <ThemePreferenceSelector />
         </div>
         <div className="flex items-center justify-between py-4">
           <div>
@@ -38,6 +39,8 @@ export function SettingsScreen() {
           <p className="text-text-primary tabular-nums">{version ?? '…'}</p>
         </div>
       </GlassCard>
+
+      <ShortcutsReference />
 
       <CategoryManager />
     </div>

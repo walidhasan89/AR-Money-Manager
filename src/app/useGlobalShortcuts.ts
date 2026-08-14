@@ -4,10 +4,11 @@ import { useToastStore } from '../store/toastStore'
 import { useUiStore } from '../store/uiStore'
 import { useTheme } from './theme-context'
 
-/** Ctrl+E / Ctrl+I / Ctrl+D / Ctrl+B per docs/ui-ux/UI_UX_GUIDE.md's shortcut table. */
+/** Ctrl+E / Ctrl+I / Ctrl+D / Ctrl+B / Ctrl+K per docs/ui-ux/UI_UX_GUIDE.md's shortcut table. */
 export function useGlobalShortcuts() {
   const openQuickAdd = useUiStore((s) => s.openQuickAdd)
   const openAddIncome = useUiStore((s) => s.openAddIncome)
+  const toggleCommandPalette = useUiStore((s) => s.toggleCommandPalette)
   const { toggleTheme } = useTheme()
   const showToast = useToastStore((s) => s.showToast)
 
@@ -31,9 +32,13 @@ export function useGlobalShortcuts() {
           e.preventDefault()
           runManualBackup(showToast)
           break
+        case 'k':
+          e.preventDefault()
+          toggleCommandPalette()
+          break
       }
     }
     window.addEventListener('keydown', onKeyDown)
     return () => window.removeEventListener('keydown', onKeyDown)
-  }, [openQuickAdd, openAddIncome, toggleTheme, showToast])
+  }, [openQuickAdd, openAddIncome, toggleTheme, showToast, toggleCommandPalette])
 }

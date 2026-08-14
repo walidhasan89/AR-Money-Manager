@@ -10,6 +10,7 @@ import { createFixedExpense, listCategories, updateFixedExpense } from '../../li
 import { parseAmountToCents } from '../../lib/format/currency'
 import { getErrorMessage } from '../../lib/ipc/types'
 import type { Category, FixedExpense } from '../../lib/ipc/types'
+import { useEscapeToClose } from '../../lib/useEscapeToClose'
 import { useToastStore } from '../../store/toastStore'
 
 const schema = z.object({
@@ -59,6 +60,8 @@ export function FixedExpenseFormModal({
     })
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open, template])
+
+  useEscapeToClose(open, onClose)
 
   async function onSubmit(values: FormValues) {
     const cents = parseAmountToCents(values.amount)

@@ -9,6 +9,7 @@ import { confirmFixedExpense } from '../../lib/ipc/commands'
 import { parseAmountToCents } from '../../lib/format/currency'
 import { getErrorMessage } from '../../lib/ipc/types'
 import type { PendingFixedExpense } from '../../lib/ipc/types'
+import { useEscapeToClose } from '../../lib/useEscapeToClose'
 import { useToastStore } from '../../store/toastStore'
 import { useDataEventsStore } from '../../store/dataEventsStore'
 
@@ -49,6 +50,8 @@ function ConfirmFixedExpenseBody({
       note: '',
     },
   })
+
+  useEscapeToClose(true, onClose)
 
   async function onSubmit(values: FormValues) {
     const cents = parseAmountToCents(values.amount)

@@ -9,6 +9,10 @@ interface UiState {
   isAddIncomeOpen: boolean
   openAddIncome: () => void
   closeAddIncome: () => void
+  isCommandPaletteOpen: boolean
+  openCommandPalette: () => void
+  closeCommandPalette: () => void
+  toggleCommandPalette: () => void
   lastUsedExpenseCategoryId: string | null
   setLastUsedExpenseCategoryId: (id: string) => void
 }
@@ -20,6 +24,10 @@ export const useUiStore = create<UiState>((set) => ({
   isAddIncomeOpen: false,
   openAddIncome: () => set({ isAddIncomeOpen: true }),
   closeAddIncome: () => set({ isAddIncomeOpen: false }),
+  isCommandPaletteOpen: false,
+  openCommandPalette: () => set({ isCommandPaletteOpen: true }),
+  closeCommandPalette: () => set({ isCommandPaletteOpen: false }),
+  toggleCommandPalette: () => set((s) => ({ isCommandPaletteOpen: !s.isCommandPaletteOpen })),
   lastUsedExpenseCategoryId: localStorage.getItem(LAST_EXPENSE_CATEGORY_KEY),
   setLastUsedExpenseCategoryId: (id) => {
     localStorage.setItem(LAST_EXPENSE_CATEGORY_KEY, id)

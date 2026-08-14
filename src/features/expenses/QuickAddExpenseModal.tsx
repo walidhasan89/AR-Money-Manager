@@ -12,6 +12,7 @@ import { createExpense, listCategories } from '../../lib/ipc/commands'
 import { parseAmountToCents } from '../../lib/format/currency'
 import { getErrorMessage } from '../../lib/ipc/types'
 import type { Category } from '../../lib/ipc/types'
+import { useEscapeToClose } from '../../lib/useEscapeToClose'
 import { useUiStore } from '../../store/uiStore'
 import { useToastStore } from '../../store/toastStore'
 import { useDataEventsStore } from '../../store/dataEventsStore'
@@ -73,15 +74,7 @@ export function QuickAddExpenseModal() {
     close()
   }
 
-  useEffect(() => {
-    if (!isOpen) return
-    function onKeyDown(e: KeyboardEvent) {
-      if (e.key === 'Escape') handleClose()
-    }
-    window.addEventListener('keydown', onKeyDown)
-    return () => window.removeEventListener('keydown', onKeyDown)
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isOpen])
+  useEscapeToClose(isOpen, handleClose)
 
   async function onSubmit(values: FormValues) {
     const cents = parseAmountToCents(values.amount)

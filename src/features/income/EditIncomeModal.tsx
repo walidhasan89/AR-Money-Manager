@@ -11,6 +11,7 @@ import { listCategories, updateIncome } from '../../lib/ipc/commands'
 import { parseAmountToCents } from '../../lib/format/currency'
 import { getErrorMessage } from '../../lib/ipc/types'
 import type { Category, Income } from '../../lib/ipc/types'
+import { useEscapeToClose } from '../../lib/useEscapeToClose'
 import { useToastStore } from '../../store/toastStore'
 
 const schema = z.object({
@@ -54,6 +55,8 @@ export function EditIncomeModal({ income, onClose, onSaved }: EditIncomeModalPro
     })
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [income])
+
+  useEscapeToClose(income !== null, onClose)
 
   async function onSubmit(values: FormValues) {
     if (!income) return

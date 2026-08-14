@@ -12,6 +12,7 @@ import { createIncome, listCategories } from '../../lib/ipc/commands'
 import { parseAmountToCents } from '../../lib/format/currency'
 import { getErrorMessage } from '../../lib/ipc/types'
 import type { Category } from '../../lib/ipc/types'
+import { useEscapeToClose } from '../../lib/useEscapeToClose'
 import { useUiStore } from '../../store/uiStore'
 import { useToastStore } from '../../store/toastStore'
 
@@ -62,14 +63,7 @@ export function AddIncomeModal() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isOpen, categories])
 
-  useEffect(() => {
-    if (!isOpen) return
-    function onKeyDown(e: KeyboardEvent) {
-      if (e.key === 'Escape') close()
-    }
-    window.addEventListener('keydown', onKeyDown)
-    return () => window.removeEventListener('keydown', onKeyDown)
-  }, [isOpen, close])
+  useEscapeToClose(isOpen, close)
 
   async function onSubmit(values: FormValues) {
     const cents = parseAmountToCents(values.amount)

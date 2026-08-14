@@ -1,6 +1,7 @@
 import { Outlet } from 'react-router-dom'
 import { SidebarNavItem } from '../components/SidebarNavItem'
 import { ThemeToggle } from '../components/ThemeToggle'
+import { CommandPalette } from './CommandPalette'
 import { navItems } from './navConfig'
 
 export function Layout() {
@@ -31,6 +32,8 @@ export function Layout() {
           <Outlet />
         </main>
       </div>
+
+      <CommandPalette />
     </div>
   )
 }

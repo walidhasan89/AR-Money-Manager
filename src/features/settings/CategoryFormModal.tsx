@@ -9,6 +9,7 @@ import { getErrorMessage } from '../../lib/ipc/types'
 import type { Category, CategoryType } from '../../lib/ipc/types'
 import { CATEGORY_COLORS } from '../../lib/categoryColors'
 import { CATEGORY_ICONS } from '../../lib/icons'
+import { useEscapeToClose } from '../../lib/useEscapeToClose'
 import { useToastStore } from '../../store/toastStore'
 
 const schema = z.object({
@@ -46,6 +47,8 @@ function CategoryFormBody({
     resolver: zodResolver(schema),
     defaultValues: { name: category?.name ?? '' },
   })
+
+  useEscapeToClose(true, onClose)
 
   async function onSubmit(values: FormValues) {
     try {

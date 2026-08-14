@@ -1,4 +1,5 @@
 import { createHashRouter, RouterProvider } from 'react-router-dom'
+import { MotionConfig } from 'framer-motion'
 import { Layout } from './app/Layout'
 import { ThemeProvider } from './app/ThemeProvider'
 import { useGlobalShortcuts } from './app/useGlobalShortcuts'
@@ -45,8 +46,17 @@ function GlobalOverlays() {
 export function App() {
   return (
     <ThemeProvider>
-      <RouterProvider router={router} />
-      <GlobalOverlays />
+      {/* Modals and other motion.* components (scale/x/y transforms) drop
+          those animations to instant when the OS's reduced-motion setting
+          is on, per docs/ui-ux/DESIGN_SYSTEM.md's accessibility guardrails
+          — the app-wide CSS rule in tokens.css only reaches plain CSS
+          transitions/animations, not Framer Motion's own transforms.
+          Bespoke value tweens (KPI count-up, chart draw-in) still check
+          useReducedMotion() directly since they're not transform-based. */}
+      <MotionConfig reducedMotion="user">
+        <RouterProvider router={router} />
+        <GlobalOverlays />
+      </MotionConfig>
     </ThemeProvider>
   )
 }

@@ -11,6 +11,7 @@ import { listCategories, updateExpense } from '../../lib/ipc/commands'
 import { parseAmountToCents } from '../../lib/format/currency'
 import { getErrorMessage } from '../../lib/ipc/types'
 import type { Category, Expense } from '../../lib/ipc/types'
+import { useEscapeToClose } from '../../lib/useEscapeToClose'
 import { useToastStore } from '../../store/toastStore'
 import { useDataEventsStore } from '../../store/dataEventsStore'
 
@@ -54,6 +55,8 @@ export function EditExpenseModal({ expense, onClose, onSaved }: EditExpenseModal
     })
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [expense])
+
+  useEscapeToClose(expense !== null, onClose)
 
   async function onSubmit(values: FormValues) {
     if (!expense) return
