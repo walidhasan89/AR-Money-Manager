@@ -1,0 +1,150 @@
+export type CategoryType = 'expense' | 'income'
+
+export interface Category {
+  id: string
+  name: string
+  type: CategoryType
+  icon: string
+  color: string
+  isSystem: boolean
+  isArchived: boolean
+  createdAt: string
+}
+
+export interface CreateCategoryInput {
+  name: string
+  type: CategoryType
+  icon: string
+  color: string
+}
+
+export interface UpdateCategoryInput {
+  name: string
+  icon: string
+  color: string
+}
+
+export interface EntryFilter {
+  dateFrom?: string
+  dateTo?: string
+  categoryIds?: string[]
+  minAmountCents?: number
+  maxAmountCents?: number
+  keyword?: string
+}
+
+export interface Expense {
+  id: string
+  amountCents: number
+  categoryId: string
+  categoryName: string
+  categoryColor: string
+  categoryIcon: string
+  date: string
+  note: string | null
+  fixedExpenseId: string | null
+  createdAt: string
+  updatedAt: string
+}
+
+export interface CreateExpenseInput {
+  amountCents: number
+  categoryId: string
+  date: string
+  note: string | null
+}
+
+export type UpdateExpenseInput = CreateExpenseInput
+
+export interface Income {
+  id: string
+  amountCents: number
+  categoryId: string
+  categoryName: string
+  categoryColor: string
+  categoryIcon: string
+  source: string | null
+  date: string
+  note: string | null
+  createdAt: string
+  updatedAt: string
+}
+
+export interface CreateIncomeInput {
+  amountCents: number
+  categoryId: string
+  source: string | null
+  date: string
+  note: string | null
+}
+
+export type UpdateIncomeInput = CreateIncomeInput
+
+export interface FixedExpense {
+  id: string
+  name: string
+  amountCents: number
+  categoryId: string
+  categoryName: string
+  categoryColor: string
+  categoryIcon: string
+  dayOfMonth: number
+  isActive: boolean
+  createdAt: string
+  updatedAt: string
+}
+
+export interface CreateFixedExpenseInput {
+  name: string
+  amountCents: number
+  categoryId: string
+  dayOfMonth: number
+}
+
+export interface UpdateFixedExpenseInput extends CreateFixedExpenseInput {
+  isActive: boolean
+}
+
+export interface PendingFixedExpense {
+  fixedExpenseId: string
+  name: string
+  amountCents: number
+  categoryId: string
+  categoryName: string
+  categoryColor: string
+  categoryIcon: string
+  dayOfMonth: number
+  dueDate: string
+}
+
+export interface ConfirmFixedExpenseInput {
+  fixedExpenseId: string
+  amountCents: number
+  date: string
+  note: string | null
+}
+
+export interface SkipFixedExpenseInput {
+  fixedExpenseId: string
+  month: string
+}
+
+export type AppErrorKind = 'validation' | 'notFound' | 'database' | 'io'
+
+export interface AppError {
+  kind: AppErrorKind
+  message?: string
+}
+
+export function isAppError(error: unknown): error is AppError {
+  return typeof error === 'object' && error !== null && 'kind' in error
+}
+
+export function getErrorMessage(error: unknown): string {
+  if (isAppError(error)) {
+    if (error.kind === 'notFound') return 'That item no longer exists.'
+    return error.message ?? 'Something went wrong.'
+  }
+  if (error instanceof Error) return error.message
+  return 'Something went wrong.'
+}

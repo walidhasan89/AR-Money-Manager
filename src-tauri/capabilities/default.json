@@ -3,5 +3,5 @@
   "identifier": "default",
   "description": "enables the default permissions",
   "windows": ["main"],
-  "permissions": ["core:default", "sql:default", "sql:allow-execute"]
+  "permissions": ["core:default", "sql:allow-load", "sql:allow-close", "dialog:default"]
 }

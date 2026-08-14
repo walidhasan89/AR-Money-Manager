@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { GlassCard } from '../../components/GlassCard'
 import { ThemeToggle } from '../../components/ThemeToggle'
 import { getAppVersion } from '../../lib/ipc/commands'
+import { CategoryManager } from './CategoryManager'
 
 export function SettingsScreen() {
   const [version, setVersion] = useState<string | null>(null)
@@ -37,6 +38,8 @@ export function SettingsScreen() {
           <p className="text-text-primary tabular-nums">{version ?? '…'}</p>
         </div>
       </GlassCard>
+
+      <CategoryManager />
     </div>
   )
 }
