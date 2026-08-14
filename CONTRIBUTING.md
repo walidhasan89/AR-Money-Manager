@@ -1,11 +1,11 @@
 # Contributing
 
-This started as a personal tool and is documented to a professional standard so it can be built phase-by-phase with Claude Code and, eventually, accept outside contributions after public release (Phase 9).
+This started as a personal tool, built phase-by-phase with Claude Code and documented to a professional standard. As of `v1.0.0` (Phase 9) it's publicly released and open to outside contributions.
 
 ## Before contributing
 
-1. Read `MASTER_PROMPT.md` and `docs/product/PRD.md` to understand product intent and boundaries.
-2. Read `ROADMAP.md` and the relevant `docs/phases/PHASE_N.md` — contributions should map to a phase or an explicitly scoped fix, not ad-hoc feature additions.
+1. Read `docs/product/PRD.md` to understand product intent and boundaries.
+2. Read `ROADMAP.md` and the relevant `docs/phases/PHASE_N.md` — contributions should map to a phase or an explicitly scoped fix, not ad-hoc feature additions. Post-`v1.0.0` work generally falls under Phase 9's follow-ups or the optional Phase 10 (AI features, opt-in only) — open a discussion first if you're proposing something new.
 3. Read `docs/development/CODING_STANDARDS.md` and `docs/development/DEVELOPMENT.md`.
 
 ## Workflow

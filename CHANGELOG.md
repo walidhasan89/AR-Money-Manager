@@ -4,6 +4,10 @@ All notable changes to this project are documented here, following [Keep a Chang
 
 ## [Unreleased]
 
+## [1.0.0] - 2026-08-14
+
+First complete MVP — Phases 1 through 8, daily-driveable, offline, and private.
+
 ### Added
 - Initial project documentation set (Phase 0 — Product Planning): PRD, architecture, database schema, design system, roadmap, phase breakdowns, master prompt, and Claude Code instructions.
 - Phase 1 — Technical Foundation: Tauri 2 + React 18 + TypeScript (strict) app shell, wired end to end.
@@ -74,7 +78,7 @@ All notable changes to this project are documented here, following [Keep a Chang
 <!--
 Template for future entries:
 
-## [1.0.0] - YYYY-MM-DD
+## [X.Y.Z] - YYYY-MM-DD
 ### Added
 - ...
 ### Changed
