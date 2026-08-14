@@ -4,6 +4,18 @@ All notable changes to this project are documented here, following [Keep a Chang
 
 ## [Unreleased]
 
+### Added
+- Settings → Currency picker (`CurrencySelector`, `currencyStore.ts`): switches the symbol `formatCurrency()`/`AmountInput` use everywhere — display only, amounts are never converted (see `docs/product/ASSUMPTIONS.md`).
+- 25 more category icons (`lib/icons.ts`), including money/finance icons (`DollarSign`, `Banknote`, `Coins`, `CreditCard`, `PiggyBank`, `Landmark`, `HandCoins`, `BadgeDollarSign`, `Receipt`) and lifestyle icons (travel, education, fitness, pets, hobbies) — the "New Category" icon picker had noticeably too few options.
+- Sidebar: a distinct accent color per nav icon (from the same palette user categories use), and a "© Walid Hasan" footer at the bottom.
+
+### Changed
+- Renamed the app from "Personal Finance Manager" to "AR Personal Finance" (window title, `tauri.conf.json` productName, sidebar header, README) — the Tauri app identifier (`com.arfinance.desktop`) is left unchanged so existing installs/data directories aren't orphaned.
+
+### Fixed
+- Every modal (Quick Add, Edit forms, Confirm dialogs, Command Palette, etc.) reused `.glass-card`'s very low opacity (6% white in dark mode), relying on `backdrop-filter` blur to stay legible over the content behind it. On hosts where that blur renders weaker (observed on Windows WebView2), background text bled straight through, making stacked form fields/table rows look like garbled overlapping text. Added a dedicated, solidly opaque `.glass-modal` class (96% opacity) used by every modal panel instead, plus a darker backdrop overlay.
+- `main.tsx` rendered the app immediately while `checkPreMigrationBackup()`/`getDb()` ran in parallel; Dashboard's own effects fire typed IPC commands the instant they mount, and on a cold start those could race ahead of `tauri-plugin-sql` registering its connection pool, producing 2-3 "database connection not initialized yet" error toasts (never seen on a warm navigation, since the pool was already registered). Fixed by rendering the app only after both startup steps settle.
+
 ## [1.0.0] - 2026-08-14
 
 First complete MVP — Phases 1 through 8, daily-driveable, offline, and private.

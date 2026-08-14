@@ -19,6 +19,14 @@
   --glass-saturate: 140%;
   --glass-shadow: 0 8px 32px rgba(0, 0, 0, 0.24);
 
+  /* Modal surface: deliberately much less translucent than --glass-surface.
+     Modals sit over dense foreground content (forms, tables), not the mostly
+     empty ambient background dashboard cards float over, so they need to
+     read as solidly opaque even when backdrop-filter is weak/unsupported
+     (observed on Windows WebView2) — see docs/product/ASSUMPTIONS.md. */
+  --glass-modal-surface: rgba(13, 17, 28, 0.96);
+  --glass-modal-backdrop: rgba(0, 0, 0, 0.6);
+
   /* Accent */
   --accent-primary: #6c7cff;
   --accent-success: #3ddc97;
@@ -44,6 +52,9 @@
   --glass-border: rgba(10, 14, 23, 0.08);
   --glass-border-hover: rgba(10, 14, 23, 0.16);
   --glass-shadow: 0 8px 24px rgba(10, 14, 23, 0.1);
+
+  --glass-modal-surface: rgba(255, 255, 255, 0.97);
+  --glass-modal-backdrop: rgba(10, 14, 23, 0.45);
 
   --text-primary: #0a0e17;
   --text-secondary: rgba(10, 14, 23, 0.6);

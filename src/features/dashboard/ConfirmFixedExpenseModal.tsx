@@ -81,7 +81,7 @@ function ConfirmFixedExpenseBody({
       animate={{ opacity: 1, scale: 1 }}
       exit={{ opacity: 0, scale: 0.96 }}
       transition={{ duration: 0.2 }}
-      className="glass-card relative w-full max-w-sm p-6"
+      className="glass-modal relative w-full max-w-sm p-6"
     >
       <button
         type="button"
@@ -146,7 +146,7 @@ export function ConfirmFixedExpenseModal({
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 0.2 }}
-            className="absolute inset-0 bg-black/50"
+            className="absolute inset-0 bg-glass-modal-backdrop"
             onClick={onClose}
           />
           <ConfirmFixedExpenseBody pending={pending} onClose={onClose} onConfirmed={onConfirmed} />

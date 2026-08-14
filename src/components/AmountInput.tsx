@@ -1,4 +1,5 @@
 import { forwardRef, type InputHTMLAttributes } from 'react'
+import { CURRENCY_OPTIONS, useCurrencyStore } from '../store/currencyStore'
 
 interface AmountInputProps extends Omit<
   InputHTMLAttributes<HTMLInputElement>,
@@ -10,15 +11,20 @@ interface AmountInputProps extends Omit<
   currencySymbol?: string
 }
 
-/** Currency-aware, big touch/click target — the first field in Quick Add. */
+/** Currency-aware, big touch/click target — the first field in Quick Add.
+ * Defaults its symbol to Settings → Currency (display only, see
+ * currencyStore.ts) so it always matches formatCurrency() elsewhere. */
 export const AmountInput = forwardRef<HTMLInputElement, AmountInputProps>(
-  ({ value, onChange, error, currencySymbol = '৳', className = '', ...rest }, ref) => {
+  ({ value, onChange, error, currencySymbol, className = '', ...rest }, ref) => {
+    const currency = useCurrencyStore((s) => s.currency)
+    const symbol =
+      currencySymbol ?? CURRENCY_OPTIONS.find((c) => c.code === currency)?.symbol ?? currency
     return (
       <div>
         <div
           className={`border-glass-border focus-within:border-accent-primary flex items-center gap-2 rounded-control border bg-black/10 px-4 py-3 transition-colors ${className}`}
         >
-          <span className="text-text-secondary tabular-nums text-2xl">{currencySymbol}</span>
+          <span className="text-text-secondary tabular-nums text-2xl">{symbol}</span>
           <input
             ref={ref}
             type="text"

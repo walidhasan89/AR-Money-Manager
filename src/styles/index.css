@@ -9,6 +9,8 @@
   --color-glass-surface: var(--glass-surface);
   --color-glass-border: var(--glass-border);
   --color-glass-border-hover: var(--glass-border-hover);
+  --color-glass-modal-surface: var(--glass-modal-surface);
+  --color-glass-modal-backdrop: var(--glass-modal-backdrop);
   --color-accent-primary: var(--accent-primary);
   --color-accent-success: var(--accent-success);
   --color-accent-warning: var(--accent-warning);
@@ -67,6 +69,16 @@
     box-shadow:
       0 12px 40px rgba(0, 0, 0, 0.28),
       var(--glass-shadow);
+  }
+
+  /* Modal/dialog panels: same shape as .glass-card but solidly opaque (see
+     --glass-modal-surface) so content behind a modal never bleeds through,
+     regardless of backdrop-filter support/strength on the host. */
+  .glass-modal {
+    background: var(--glass-modal-surface);
+    border: 1px solid var(--glass-border);
+    border-radius: var(--radius-card);
+    box-shadow: var(--glass-shadow);
   }
 
   /* Dashboard ambient background (DESIGN_SYSTEM.md "Futuristic dashboard

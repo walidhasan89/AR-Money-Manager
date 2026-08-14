@@ -124,7 +124,7 @@ function CommandPaletteBody({ onClose }: { onClose: () => void }) {
       animate={{ opacity: 1, scale: 1 }}
       exit={{ opacity: 0, scale: 0.96 }}
       transition={{ duration: 0.12 }}
-      className="glass-card relative flex w-full max-w-lg flex-col overflow-hidden p-0"
+      className="glass-modal relative flex w-full max-w-lg flex-col overflow-hidden p-0"
     >
       <div className="border-glass-border flex items-center gap-2 border-b px-4 py-3">
         <Search size={16} strokeWidth={1.75} className="text-text-secondary shrink-0" />
@@ -198,7 +198,7 @@ export function CommandPalette() {
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 0.12 }}
-            className="absolute inset-0 bg-black/50"
+            className="absolute inset-0 bg-glass-modal-backdrop"
             onClick={close}
           />
           <CommandPaletteBody onClose={close} />

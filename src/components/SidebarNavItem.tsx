@@ -5,10 +5,11 @@ interface SidebarNavItemProps {
   to: string
   label: string
   icon: LucideIcon
+  iconColor: string
   end?: boolean
 }
 
-export function SidebarNavItem({ to, label, icon: Icon, end }: SidebarNavItemProps) {
+export function SidebarNavItem({ to, label, icon: Icon, iconColor, end }: SidebarNavItemProps) {
   return (
     <NavLink
       to={to}
@@ -27,7 +28,7 @@ export function SidebarNavItem({ to, label, icon: Icon, end }: SidebarNavItemPro
           {isActive && (
             <span className="bg-accent-primary absolute inset-y-1 left-0 w-0.5 rounded-full shadow-[0_0_8px_var(--accent-primary)]" />
           )}
-          <Icon size={18} strokeWidth={1.75} aria-hidden />
+          <Icon size={18} strokeWidth={1.75} aria-hidden style={{ color: iconColor }} />
           <span>{label}</span>
         </>
       )}

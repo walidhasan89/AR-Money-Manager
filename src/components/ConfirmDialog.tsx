@@ -42,7 +42,7 @@ export function ConfirmDialog({
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 0.12 }}
-            className="absolute inset-0 bg-black/50"
+            className="absolute inset-0 bg-glass-modal-backdrop"
             onClick={handleBackdropClick}
           />
           <motion.div
@@ -53,7 +53,7 @@ export function ConfirmDialog({
             animate={{ opacity: 1, scale: 1, x: shake ? [0, -6, 6, -4, 4, 0] : 0 }}
             exit={{ opacity: 0, scale: 0.96 }}
             transition={{ duration: shake ? 0.2 : 0.12 }}
-            className="glass-card relative w-full max-w-sm p-6"
+            className="glass-modal relative w-full max-w-sm p-6"
           >
             <h2 id="confirm-dialog-title" className="text-text-primary text-lg font-semibold">
               {title}

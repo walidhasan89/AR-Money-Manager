@@ -87,7 +87,7 @@ export function EditExpenseModal({ expense, onClose, onSaved }: EditExpenseModal
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 0.2 }}
-            className="absolute inset-0 bg-black/50"
+            className="absolute inset-0 bg-glass-modal-backdrop"
             onClick={onClose}
           />
           <motion.div
@@ -98,7 +98,7 @@ export function EditExpenseModal({ expense, onClose, onSaved }: EditExpenseModal
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0, scale: 0.96 }}
             transition={{ duration: 0.2 }}
-            className="glass-card relative w-full max-w-md p-6"
+            className="glass-modal relative w-full max-w-md p-6"
           >
             <button
               type="button"

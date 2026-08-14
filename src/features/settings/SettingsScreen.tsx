@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { CurrencySelector } from '../../components/CurrencySelector'
 import { GlassCard } from '../../components/GlassCard'
 import { ThemePreferenceSelector } from '../../components/ThemePreferenceSelector'
 import { getAppVersion } from '../../lib/ipc/commands'
@@ -28,8 +29,11 @@ export function SettingsScreen() {
         <div className="flex items-center justify-between py-4">
           <div>
             <p className="text-text-primary font-medium">Currency</p>
-            <p className="text-text-secondary text-sm">BDT (৳) — configurable later.</p>
+            <p className="text-text-secondary text-sm">
+              Changes the symbol shown throughout the app — amounts aren't converted.
+            </p>
           </div>
+          <CurrencySelector />
         </div>
         <div className="flex items-center justify-between pt-4">
           <div>

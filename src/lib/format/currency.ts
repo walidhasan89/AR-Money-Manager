@@ -1,12 +1,19 @@
-const CURRENCY_SYMBOLS: Record<string, string> = {
-  BDT: '৳',
-}
+import { CURRENCY_OPTIONS, useCurrencyStore } from '../../store/currencyStore'
+
+const CURRENCY_SYMBOLS: Record<string, string> = Object.fromEntries(
+  CURRENCY_OPTIONS.map((c) => [c.code, c.symbol]),
+)
 
 /**
  * The only place cents become a display string. Money stays integer cents
- * everywhere else — never do float math on it (CLAUDE.md).
+ * everywhere else — never do float math on it (CLAUDE.md). `currency`
+ * defaults to the user's current Settings → Currency choice (display symbol
+ * only — see currencyStore.ts; amounts are never converted).
  */
-export function formatCurrency(cents: number, currency: string = 'BDT'): string {
+export function formatCurrency(
+  cents: number,
+  currency: string = useCurrencyStore.getState().currency,
+): string {
   const symbol = CURRENCY_SYMBOLS[currency] ?? currency
   const sign = cents < 0 ? '-' : ''
   const absolute = Math.abs(cents)
