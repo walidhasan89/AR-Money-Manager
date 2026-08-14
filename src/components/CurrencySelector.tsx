@@ -45,15 +45,17 @@ export function CurrencySelector() {
         aria-expanded={isOpen}
         aria-label="Currency"
         onClick={() => setIsOpen((v) => !v)}
-        className={`border-glass-border flex min-w-56 items-center justify-between gap-2 rounded-control border bg-black/10 px-3 py-2 text-sm transition-colors hover:border-glass-border-hover ${
+        className={`border-glass-border flex w-72 items-center justify-between gap-2 rounded-control border bg-black/10 px-3 py-2 text-sm transition-colors hover:border-glass-border-hover ${
           isOpen ? 'border-accent-primary' : ''
         }`}
       >
-        <span className="text-text-primary flex items-center gap-2">
-          <span className="text-accent-primary w-4 text-center tabular-nums">
+        <span className="text-text-primary flex min-w-0 items-center gap-2">
+          <span className="text-accent-primary w-4 shrink-0 text-center tabular-nums">
             {selected.symbol}
           </span>
-          {selected.code} — {selected.label}
+          <span className="truncate">
+            {selected.code} — {selected.label}
+          </span>
         </span>
         <ChevronDown
           size={14}
@@ -72,7 +74,7 @@ export function CurrencySelector() {
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: -4, scale: 0.98 }}
             transition={{ duration: 0.12, ease: 'easeOut' }}
-            className="glass-modal absolute top-full right-0 z-20 mt-2 max-h-72 w-full min-w-56 overflow-y-auto p-1.5"
+            className="glass-modal absolute top-full right-0 z-20 mt-2 max-h-72 w-72 overflow-y-auto p-1.5"
           >
             {CURRENCY_OPTIONS.map((option) => {
               const isSelected = option.code === currency
@@ -89,15 +91,17 @@ export function CurrencySelector() {
                         : 'text-text-secondary hover:text-text-primary hover:bg-glass-surface'
                     }`}
                   >
-                    <span className="flex items-center gap-2">
-                      <span className="w-4 text-center tabular-nums">{option.symbol}</span>
-                      {option.code} — {option.label}
+                    <span className="flex min-w-0 items-center gap-2">
+                      <span className="w-4 shrink-0 text-center tabular-nums">{option.symbol}</span>
+                      <span className="truncate">
+                        {option.code} — {option.label}
+                      </span>
                     </span>
                     {isSelected && (
                       <Check
                         size={14}
                         strokeWidth={2}
-                        className="text-accent-primary"
+                        className="text-accent-primary shrink-0"
                         aria-hidden
                       />
                     )}

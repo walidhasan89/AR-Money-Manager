@@ -18,7 +18,12 @@ export function SettingsScreen() {
   return (
     <div className="flex flex-col gap-6">
       <h1 className="text-text-primary text-2xl font-semibold tracking-tight">Settings</h1>
-      <GlassCard className="divide-glass-border flex flex-col divide-y">
+      {/* relative z-10: without an explicit stacking order, this card and
+          ShortcutsReference below it (siblings, each their own stacking
+          context via backdrop-filter) paint in DOM order — so the currency
+          dropdown, which extends past this card's bottom edge while open,
+          would get covered by ShortcutsReference painting on top of it. */}
+      <GlassCard className="divide-glass-border relative z-10 flex flex-col divide-y">
         <div className="flex items-center justify-between pb-4">
           <div>
             <p className="text-text-primary font-medium">Theme</p>
