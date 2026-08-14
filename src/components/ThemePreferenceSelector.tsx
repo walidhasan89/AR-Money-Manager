@@ -13,7 +13,7 @@ export function ThemePreferenceSelector() {
 
   return (
     <div
-      role="tablist"
+      role="group"
       aria-label="Theme"
       className="border-glass-border flex gap-1 rounded-control border p-1"
     >
@@ -21,8 +21,7 @@ export function ThemePreferenceSelector() {
         <button
           key={option.value}
           type="button"
-          role="tab"
-          aria-selected={preference === option.value}
+          aria-pressed={preference === option.value}
           onClick={() => setPreference(option.value)}
           className={`rounded-control px-3 py-1.5 text-sm transition-colors ${
             preference === option.value
