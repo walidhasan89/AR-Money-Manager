@@ -156,6 +156,34 @@ export interface SetCategoryBudgetInput {
   amountCents: number
 }
 
+export interface CategorySpend {
+  categoryId: string
+  categoryName: string
+  categoryColor: string
+  amountCents: number
+}
+
+export interface DailySpend {
+  date: string
+  amountCents: number
+}
+
+export interface DashboardSummary {
+  month: string
+  incomeCents: number
+  expensesCents: number
+  savingsCents: number
+  remainingCents: number
+  spendingByCategory: CategorySpend[]
+  dailySpending: DailySpend[]
+  recentTransactions: Expense[]
+}
+
+export interface SavingsTrendPoint {
+  month: string
+  totalCents: number
+}
+
 export type AppErrorKind = 'validation' | 'notFound' | 'database' | 'io'
 
 export interface AppError {

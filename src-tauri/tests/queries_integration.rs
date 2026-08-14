@@ -8,7 +8,7 @@ use app_lib::models::{
     CreateIncomeInput, EntryFilter, SkipFixedExpenseInput, UpdateCategoryInput, UpdateExpenseInput,
     UpdateFixedExpenseInput, UpdateIncomeInput,
 };
-use app_lib::queries::{budgets, categories, expenses, fixed_expenses, income};
+use app_lib::queries::{budgets, categories, dashboard, expenses, fixed_expenses, income};
 use chrono::NaiveDate;
 use sqlx::sqlite::{SqliteConnectOptions, SqlitePoolOptions};
 use sqlx::{Pool, Sqlite};
@@ -580,4 +580,157 @@ async fn copy_last_month_duplicates_prior_budgets() {
         .find(|c| c.category_id == HOUSE_RENT)
         .unwrap();
     assert_eq!(house_rent.budget_cents, 50_000);
+}
+
+async fn insert_savings_entry(pool: &Pool<Sqlite>, amount_cents: i64, date: &str) {
+    sqlx::query(
+        "INSERT INTO savings_entries (id, amount_cents, type, date) VALUES (?1, ?2, 'general', ?3)",
+    )
+    .bind(uuid::Uuid::new_v4().to_string())
+    .bind(amount_cents)
+    .bind(date)
+    .execute(pool)
+    .await
+    .unwrap();
+}
+
+#[tokio::test]
+async fn dashboard_summary_matches_underlying_data_exactly() {
+    let (_dir, pool) = fresh_pool().await;
+
+    income::create(
+        &pool,
+        CreateIncomeInput {
+            amount_cents: 500_000,
+            category_id: SALARY.into(),
+            source: None,
+            date: "2026-08-01".into(),
+            note: None,
+        },
+    )
+    .await
+    .unwrap();
+    expenses::create(
+        &pool,
+        CreateExpenseInput {
+            amount_cents: 5_000,
+            category_id: GROCERIES.into(),
+            date: "2026-08-03".into(),
+            note: None,
+        },
+    )
+    .await
+    .unwrap();
+    expenses::create(
+        &pool,
+        CreateExpenseInput {
+            amount_cents: 3_000,
+            category_id: GROCERIES.into(),
+            date: "2026-08-03".into(),
+            note: None,
+        },
+    )
+    .await
+    .unwrap();
+    expenses::create(
+        &pool,
+        CreateExpenseInput {
+            amount_cents: 50_000,
+            category_id: HOUSE_RENT.into(),
+            date: "2026-08-05".into(),
+            note: None,
+        },
+    )
+    .await
+    .unwrap();
+    // Different month — must not leak into August totals.
+    expenses::create(
+        &pool,
+        CreateExpenseInput {
+            amount_cents: 99_000,
+            category_id: GROCERIES.into(),
+            date: "2026-07-15".into(),
+            note: None,
+        },
+    )
+    .await
+    .unwrap();
+    insert_savings_entry(&pool, 20_000, "2026-08-10").await;
+
+    let summary = dashboard::get_summary(&pool, "2026-08").await.unwrap();
+
+    assert_eq!(summary.income_cents, 500_000);
+    assert_eq!(
+        summary.expenses_cents, 58_000,
+        "5_000 + 3_000 + 50_000, July excluded"
+    );
+    assert_eq!(summary.savings_cents, 20_000);
+    assert_eq!(summary.remaining_cents, 500_000 - 58_000 - 20_000);
+
+    let groceries = summary
+        .spending_by_category
+        .iter()
+        .find(|c| c.category_id == GROCERIES)
+        .unwrap();
+    assert_eq!(
+        groceries.amount_cents, 8_000,
+        "5_000 + 3_000 combined for the day"
+    );
+    let house_rent = summary
+        .spending_by_category
+        .iter()
+        .find(|c| c.category_id == HOUSE_RENT)
+        .unwrap();
+    assert_eq!(house_rent.amount_cents, 50_000);
+    assert!(
+        !summary
+            .spending_by_category
+            .iter()
+            .any(|c| c.category_name == "Dining"),
+        "categories with zero spend should not appear in the donut breakdown"
+    );
+
+    assert_eq!(summary.daily_spending.len(), 31, "August has 31 days");
+    let day3 = summary
+        .daily_spending
+        .iter()
+        .find(|d| d.date == "2026-08-03")
+        .unwrap();
+    assert_eq!(day3.amount_cents, 8_000);
+    let day1 = summary
+        .daily_spending
+        .iter()
+        .find(|d| d.date == "2026-08-01")
+        .unwrap();
+    assert_eq!(
+        day1.amount_cents, 0,
+        "days with no spend must still appear, at zero"
+    );
+
+    assert_eq!(summary.recent_transactions.len(), 3);
+    assert_eq!(
+        summary.recent_transactions[0].date, "2026-08-05",
+        "most recent first"
+    );
+}
+
+#[tokio::test]
+async fn savings_trend_covers_trailing_months_in_order() {
+    let (_dir, pool) = fresh_pool().await;
+
+    insert_savings_entry(&pool, 10_000, "2026-06-15").await;
+    insert_savings_entry(&pool, 15_000, "2026-08-01").await;
+    insert_savings_entry(&pool, 5_000, "2026-08-20").await;
+
+    let trend = dashboard::get_savings_trend(&pool, "2026-08", 3)
+        .await
+        .unwrap();
+
+    assert_eq!(trend.len(), 3);
+    assert_eq!(trend[0].month, "2026-06");
+    assert_eq!(trend[0].total_cents, 10_000);
+    assert_eq!(trend[1].month, "2026-07");
+    assert_eq!(trend[1].total_cents, 0);
+    assert_eq!(trend[2].month, "2026-08");
+    assert_eq!(trend[2].total_cents, 20_000);
 }

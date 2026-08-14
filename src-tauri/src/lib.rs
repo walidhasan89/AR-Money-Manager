@@ -1,4 +1,5 @@
 mod commands;
+pub mod date_utils;
 pub mod db;
 pub mod error;
 pub mod models;
@@ -76,6 +77,8 @@ pub fn run() {
             commands::budgets::set_overall_budget,
             commands::budgets::set_category_budget,
             commands::budgets::copy_last_month_budget,
+            commands::dashboard::get_dashboard_summary,
+            commands::dashboard::get_savings_trend,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

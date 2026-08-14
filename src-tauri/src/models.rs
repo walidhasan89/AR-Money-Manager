@@ -213,3 +213,39 @@ pub struct SetCategoryBudgetInput {
     pub category_id: String,
     pub amount_cents: i64,
 }
+
+#[derive(Debug, Clone, Serialize, sqlx::FromRow)]
+#[serde(rename_all = "camelCase")]
+pub struct CategorySpend {
+    pub category_id: String,
+    pub category_name: String,
+    pub category_color: String,
+    pub amount_cents: i64,
+}
+
+#[derive(Debug, Clone, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct DailySpend {
+    pub date: String,
+    pub amount_cents: i64,
+}
+
+#[derive(Debug, Clone, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct DashboardSummary {
+    pub month: String,
+    pub income_cents: i64,
+    pub expenses_cents: i64,
+    pub savings_cents: i64,
+    pub remaining_cents: i64,
+    pub spending_by_category: Vec<CategorySpend>,
+    pub daily_spending: Vec<DailySpend>,
+    pub recent_transactions: Vec<Expense>,
+}
+
+#[derive(Debug, Clone, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct SavingsTrendPoint {
+    pub month: String,
+    pub total_cents: i64,
+}

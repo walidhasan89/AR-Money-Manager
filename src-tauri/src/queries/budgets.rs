@@ -1,8 +1,8 @@
-use chrono::{Datelike, NaiveDate};
 use sqlx::{Pool, Sqlite};
 use uuid::Uuid;
 
-use crate::error::{AppError, AppResult};
+use crate::date_utils::shift_month;
+use crate::error::AppResult;
 use crate::models::{BudgetSummary, CategoryBudget};
 
 pub async fn get_summary(pool: &Pool<Sqlite>, month: &str) -> AppResult<BudgetSummary> {
@@ -108,23 +108,11 @@ pub async fn set_category_budget(
     get_summary(pool, month).await
 }
 
-fn previous_month(month: &str) -> AppResult<String> {
-    let date = NaiveDate::parse_from_str(&format!("{month}-01"), "%Y-%m-%d")
-        .map_err(|_| AppError::Validation(format!("Invalid month: {month}")))?;
-    let prev = if date.month() == 1 {
-        NaiveDate::from_ymd_opt(date.year() - 1, 12, 1)
-    } else {
-        NaiveDate::from_ymd_opt(date.year(), date.month() - 1, 1)
-    }
-    .ok_or_else(|| AppError::Validation(format!("Invalid month: {month}")))?;
-    Ok(prev.format("%Y-%m").to_string())
-}
-
 /// Copies every budget row (overall + per-category) from the prior month
 /// into `month`, upserting so re-running it is idempotent. Returns how many
 /// rows were copied (0 if the prior month has no budget set).
 pub async fn copy_last_month(pool: &Pool<Sqlite>, month: &str) -> AppResult<usize> {
-    let prev_month = previous_month(month)?;
+    let prev_month = shift_month(month, -1)?;
 
     let rows = sqlx::query_as::<_, (Option<String>, i64)>(
         "SELECT category_id, amount_cents FROM budgets WHERE month = ?1",

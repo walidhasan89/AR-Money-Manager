@@ -7,11 +7,13 @@ import type {
   CreateExpenseInput,
   CreateFixedExpenseInput,
   CreateIncomeInput,
+  DashboardSummary,
   EntryFilter,
   Expense,
   FixedExpense,
   Income,
   PendingFixedExpense,
+  SavingsTrendPoint,
   SetCategoryBudgetInput,
   SetOverallBudgetInput,
   SkipFixedExpenseInput,
@@ -133,4 +135,12 @@ export function setCategoryBudget(input: SetCategoryBudgetInput): Promise<Budget
 
 export function copyLastMonthBudget(month: string): Promise<number> {
   return invoke<number>('copy_last_month_budget', { month })
+}
+
+export function getDashboardSummary(month: string): Promise<DashboardSummary> {
+  return invoke<DashboardSummary>('get_dashboard_summary', { month })
+}
+
+export function getSavingsTrend(month: string): Promise<SavingsTrendPoint[]> {
+  return invoke<SavingsTrendPoint[]>('get_savings_trend', { month })
 }
