@@ -386,3 +386,23 @@ pub struct ReportSummary {
     pub overall_spent_cents: i64,
     pub categories: Vec<ReportCategoryBreakdown>,
 }
+
+#[derive(Debug, Clone, Serialize, sqlx::FromRow)]
+#[serde(rename_all = "camelCase")]
+pub struct BackupLogEntry {
+    pub id: String,
+    pub file_path: String,
+    pub created_at: String,
+    #[sqlx(rename = "trigger")]
+    #[serde(rename = "trigger")]
+    pub trigger_kind: String,
+}
+
+/// `is_stale` is true when there's no manual backup on record, or the most
+/// recent one is older than 14 days (docs/architecture/BACKUP_STRATEGY.md).
+#[derive(Debug, Clone, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct BackupStatus {
+    pub last_manual_backup_at: Option<String>,
+    pub is_stale: bool,
+}

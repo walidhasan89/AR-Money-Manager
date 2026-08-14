@@ -1,3 +1,4 @@
+pub mod backup;
 pub mod budgets;
 pub mod categories;
 pub mod csv_export;

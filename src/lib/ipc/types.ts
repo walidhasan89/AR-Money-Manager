@@ -272,6 +272,20 @@ export interface ReportSummary {
   categories: ReportCategoryBreakdown[]
 }
 
+export type BackupTrigger = 'manual' | 'pre_restore_safety'
+
+export interface BackupLogEntry {
+  id: string
+  filePath: string
+  createdAt: string
+  trigger: BackupTrigger
+}
+
+export interface BackupStatus {
+  lastManualBackupAt: string | null
+  isStale: boolean
+}
+
 export type AppErrorKind = 'validation' | 'notFound' | 'database' | 'io'
 
 export interface AppError {

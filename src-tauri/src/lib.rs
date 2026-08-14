@@ -90,6 +90,10 @@ pub fn run() {
             commands::savings::delete_savings_entry,
             commands::reports::get_report_summary,
             commands::csv_export::export_report_csv,
+            commands::backup::get_backup_status,
+            commands::backup::create_manual_backup,
+            commands::backup::restore_backup,
+            commands::backup::check_pre_migration_backup,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

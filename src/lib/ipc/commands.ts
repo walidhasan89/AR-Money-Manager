@@ -1,5 +1,7 @@
 import { invoke } from '@tauri-apps/api/core'
 import type {
+  BackupLogEntry,
+  BackupStatus,
   BudgetSummary,
   Category,
   ConfirmFixedExpenseInput,
@@ -199,4 +201,20 @@ export function getReportSummary(month: string): Promise<ReportSummary> {
 
 export function exportReportCsv(path: string, month: string): Promise<void> {
   return invoke<void>('export_report_csv', { path, month })
+}
+
+export function getBackupStatus(): Promise<BackupStatus> {
+  return invoke<BackupStatus>('get_backup_status')
+}
+
+export function createManualBackup(path: string): Promise<BackupLogEntry> {
+  return invoke<BackupLogEntry>('create_manual_backup', { path })
+}
+
+export function restoreBackup(path: string): Promise<void> {
+  return invoke<void>('restore_backup', { path })
+}
+
+export function checkPreMigrationBackup(): Promise<boolean> {
+  return invoke<boolean>('check_pre_migration_backup')
 }

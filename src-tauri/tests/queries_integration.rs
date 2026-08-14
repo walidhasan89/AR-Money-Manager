@@ -10,11 +10,13 @@ use app_lib::models::{
     UpdateGoalInput, UpdateIncomeInput, UpdateSavingsEntryInput,
 };
 use app_lib::queries::{
-    budgets, categories, dashboard, expenses, fixed_expenses, goals, income, reports, savings,
+    backup, budgets, categories, dashboard, expenses, fixed_expenses, goals, income, reports,
+    savings,
 };
-use chrono::NaiveDate;
-use sqlx::sqlite::{SqliteConnectOptions, SqlitePoolOptions};
+use chrono::{NaiveDate, Utc};
+use sqlx::sqlite::{SqliteConnectOptions, SqliteJournalMode, SqlitePoolOptions};
 use sqlx::{Pool, Sqlite};
+use std::path::Path;
 use tempfile::TempDir;
 
 const GROCERIES: &str = "18d83cb2-4ad3-4825-a507-d8633e05512d";
@@ -44,6 +46,45 @@ async fn fresh_pool() -> (TempDir, Pool<Sqlite>) {
     }
 
     (dir, pool)
+}
+
+/// Same as `fresh_pool`, but with the journal mode explicitly forced to WAL —
+/// used to reproduce the class of bug where a raw file copy of the main `.db`
+/// misses commits still sitting in the `-wal` sidecar file.
+async fn fresh_wal_pool() -> (TempDir, Pool<Sqlite>) {
+    let dir = TempDir::new().expect("create temp dir");
+    let db_path = dir.path().join("test.db");
+    let options = SqliteConnectOptions::new()
+        .filename(&db_path)
+        .create_if_missing(true)
+        .journal_mode(SqliteJournalMode::Wal);
+    let pool = SqlitePoolOptions::new()
+        .connect_with(options)
+        .await
+        .expect("connect to temp sqlite db");
+
+    for sql in [
+        include_str!("../migrations/001_init.sql"),
+        include_str!("../migrations/002_category_archive.sql"),
+        include_str!("../migrations/003_fixed_expense_skips.sql"),
+    ] {
+        sqlx::raw_sql(sql)
+            .execute(&pool)
+            .await
+            .expect("apply migration");
+    }
+
+    (dir, pool)
+}
+
+async fn open_pool_at(path: &Path) -> Pool<Sqlite> {
+    let options = SqliteConnectOptions::new()
+        .filename(path)
+        .create_if_missing(false);
+    SqlitePoolOptions::new()
+        .connect_with(options)
+        .await
+        .expect("connect to existing sqlite db")
 }
 
 #[tokio::test]
@@ -1147,4 +1188,246 @@ async fn report_csv_export_is_well_formed_and_contains_expected_totals() {
         .expect("category breakdown row for Groceries");
     assert_eq!(groceries_row.get(1), Some("150.00"), "spent");
     assert_eq!(groceries_row.get(2), Some("200.00"), "budget");
+}
+
+async fn insert_backup_log(pool: &Pool<Sqlite>, file_path: &str, trigger: &str, created_at: &str) {
+    sqlx::query(
+        "INSERT INTO backups_log (id, file_path, trigger, created_at) VALUES (?1, ?2, ?3, ?4)",
+    )
+    .bind(uuid::Uuid::new_v4().to_string())
+    .bind(file_path)
+    .bind(trigger)
+    .bind(created_at)
+    .execute(pool)
+    .await
+    .unwrap();
+}
+
+#[tokio::test]
+async fn manual_backup_produces_row_count_matching_file() {
+    let (dir, pool) = fresh_pool().await;
+    let live_path = dir.path().join("test.db");
+
+    for i in 0..3 {
+        expenses::create(
+            &pool,
+            CreateExpenseInput {
+                amount_cents: 1_000 * (i + 1),
+                category_id: GROCERIES.into(),
+                date: "2026-08-01".into(),
+                note: None,
+            },
+        )
+        .await
+        .unwrap();
+    }
+    let original_count = expenses::list(&pool, &EntryFilter::default())
+        .await
+        .unwrap()
+        .len();
+
+    let backup_dir = TempDir::new().unwrap();
+    let backup_path = backup_dir
+        .path()
+        .join("finance-backup-2026-08-14-1200.sqlite");
+    backup::copy_file(&live_path, &backup_path).unwrap();
+
+    let backup_pool = open_pool_at(&backup_path).await;
+    let backup_count = expenses::list(&backup_pool, &EntryFilter::default())
+        .await
+        .unwrap()
+        .len();
+
+    assert_eq!(backup_count, original_count);
+    assert_eq!(backup_count, 3);
+}
+
+#[tokio::test]
+async fn restore_swaps_live_db_and_creates_safety_copy_first() {
+    let (live_dir, live_pool) = fresh_pool().await;
+    let live_path = live_dir.path().join("test.db");
+    expenses::create(
+        &live_pool,
+        CreateExpenseInput {
+            amount_cents: 1_000,
+            category_id: GROCERIES.into(),
+            date: "2026-08-01".into(),
+            note: Some("Live data".into()),
+        },
+    )
+    .await
+    .unwrap();
+
+    let (backup_dir, backup_pool) = fresh_pool().await;
+    let backup_path = backup_dir.path().join("test.db");
+    expenses::create(
+        &backup_pool,
+        CreateExpenseInput {
+            amount_cents: 2_000,
+            category_id: GROCERIES.into(),
+            date: "2026-08-02".into(),
+            note: Some("Backup data".into()),
+        },
+    )
+    .await
+    .unwrap();
+    backup_pool.close().await;
+
+    backup::validate_backup_file(&backup_path).await.unwrap();
+
+    let auto_dir = TempDir::new().unwrap();
+    let safety_copy_path = auto_dir.path().join("pre-restore-test.sqlite");
+    backup::copy_file(&live_path, &safety_copy_path).unwrap();
+
+    live_pool.close().await;
+    backup::copy_file(&backup_path, &live_path).unwrap();
+
+    let restored_pool = open_pool_at(&live_path).await;
+    let restored = expenses::list(&restored_pool, &EntryFilter::default())
+        .await
+        .unwrap();
+    assert_eq!(restored.len(), 1);
+    assert_eq!(
+        restored[0].note.as_deref(),
+        Some("Backup data"),
+        "live DB must now contain the restored backup's data"
+    );
+
+    let safety_pool = open_pool_at(&safety_copy_path).await;
+    let preserved = expenses::list(&safety_pool, &EntryFilter::default())
+        .await
+        .unwrap();
+    assert_eq!(preserved.len(), 1);
+    assert_eq!(
+        preserved[0].note.as_deref(),
+        Some("Live data"),
+        "the pre-restore safety copy must preserve what was live before the restore"
+    );
+}
+
+#[tokio::test]
+async fn restoring_invalid_file_fails_without_touching_live_data() {
+    let (live_dir, live_pool) = fresh_pool().await;
+    let live_path = live_dir.path().join("test.db");
+    expenses::create(
+        &live_pool,
+        CreateExpenseInput {
+            amount_cents: 5_000,
+            category_id: GROCERIES.into(),
+            date: "2026-08-01".into(),
+            note: Some("Untouched live data".into()),
+        },
+    )
+    .await
+    .unwrap();
+
+    let garbage_dir = TempDir::new().unwrap();
+    let garbage_path = garbage_dir.path().join("not-a-backup.sqlite");
+    std::fs::write(&garbage_path, b"this is not a sqlite database").unwrap();
+
+    let live_bytes_before = std::fs::read(&live_path).unwrap();
+    let result = backup::validate_backup_file(&garbage_path).await;
+    assert!(result.is_err());
+
+    let live_bytes_after = std::fs::read(&live_path).unwrap();
+    assert_eq!(
+        live_bytes_before, live_bytes_after,
+        "live DB file must be byte-for-byte unchanged after a rejected restore"
+    );
+
+    let still_live = expenses::list(&live_pool, &EntryFilter::default())
+        .await
+        .unwrap();
+    assert_eq!(still_live[0].note.as_deref(), Some("Untouched live data"));
+
+    // A structurally-valid but wrong-schema SQLite file must also be rejected.
+    let (empty_dir, empty_pool) = fresh_pool().await;
+    let empty_path = empty_dir.path().join("test.db");
+    sqlx::raw_sql("DROP TABLE backups_log")
+        .execute(&empty_pool)
+        .await
+        .unwrap();
+    empty_pool.close().await;
+    let wrong_schema_result = backup::validate_backup_file(&empty_path).await;
+    assert!(wrong_schema_result.is_err());
+}
+
+#[tokio::test]
+async fn stale_backup_reminder_reflects_last_manual_backup_and_ignores_safety_copies() {
+    let (_dir, pool) = fresh_pool().await;
+    let now = Utc::now();
+
+    let old_manual = (now - chrono::Duration::days(20)).to_rfc3339();
+    insert_backup_log(&pool, "/backups/old.sqlite", "manual", &old_manual).await;
+    let recent_safety = now.to_rfc3339();
+    insert_backup_log(
+        &pool,
+        "/backups/auto/safety.sqlite",
+        "pre_restore_safety",
+        &recent_safety,
+    )
+    .await;
+
+    let last = backup::get_last_manual_backup(&pool)
+        .await
+        .unwrap()
+        .unwrap();
+    assert_eq!(
+        last.file_path, "/backups/old.sqlite",
+        "a recent pre_restore_safety row must not count as the last manual backup"
+    );
+    assert!(backup::is_stale(Some(&last.created_at), now));
+
+    let recent_manual = (now - chrono::Duration::days(2)).to_rfc3339();
+    insert_backup_log(&pool, "/backups/new.sqlite", "manual", &recent_manual).await;
+
+    let last = backup::get_last_manual_backup(&pool)
+        .await
+        .unwrap()
+        .unwrap();
+    assert_eq!(last.file_path, "/backups/new.sqlite");
+    assert!(!backup::is_stale(Some(&last.created_at), now));
+}
+
+#[tokio::test]
+async fn wal_checkpoint_makes_recent_commits_visible_in_a_raw_file_copy() {
+    let (dir, pool) = fresh_wal_pool().await;
+    let live_path = dir.path().join("test.db");
+    assert!(
+        dir.path().join("test.db-wal").exists(),
+        "WAL sidecar file should exist once the pool has written to a WAL-mode db"
+    );
+
+    for i in 0..3 {
+        expenses::create(
+            &pool,
+            CreateExpenseInput {
+                amount_cents: 500 * (i + 1),
+                category_id: GROCERIES.into(),
+                date: "2026-08-01".into(),
+                note: None,
+            },
+        )
+        .await
+        .unwrap();
+    }
+
+    backup::checkpoint_wal(&pool).await.unwrap();
+
+    // Copy only the main `.db` file, exactly like a real backup/safety copy
+    // does — without the checkpoint above, the `-wal` sidecar could still
+    // hold these commits and this copy would silently miss them.
+    let dest_dir = TempDir::new().unwrap();
+    let dest_path = dest_dir.path().join("copied.db");
+    backup::copy_file(&live_path, &dest_path).unwrap();
+
+    let copied_pool = open_pool_at(&dest_path).await;
+    let copied_count = expenses::list(&copied_pool, &EntryFilter::default())
+        .await
+        .unwrap()
+        .len();
+    assert_eq!(
+        copied_count, 3,
+        "all committed rows must survive a raw copy once checkpointed"
+    );
 }

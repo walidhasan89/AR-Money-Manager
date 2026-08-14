@@ -32,4 +32,10 @@ impl From<csv::Error> for AppError {
     }
 }
 
+impl From<tauri::Error> for AppError {
+    fn from(err: tauri::Error) -> Self {
+        AppError::Io(err.to_string())
+    }
+}
+
 pub type AppResult<T> = Result<T, AppError>;
