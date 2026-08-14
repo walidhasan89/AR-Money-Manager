@@ -6,13 +6,19 @@ import type {
   CreateCategoryInput,
   CreateExpenseInput,
   CreateFixedExpenseInput,
+  CreateGoalInput,
   CreateIncomeInput,
+  CreateSavingsEntryInput,
   DashboardSummary,
   EntryFilter,
   Expense,
   FixedExpense,
+  Goal,
+  GoalProgress,
   Income,
   PendingFixedExpense,
+  SavingsEntry,
+  SavingsEntryFilter,
   SavingsTrendPoint,
   SetCategoryBudgetInput,
   SetOverallBudgetInput,
@@ -20,7 +26,9 @@ import type {
   UpdateCategoryInput,
   UpdateExpenseInput,
   UpdateFixedExpenseInput,
+  UpdateGoalInput,
   UpdateIncomeInput,
+  UpdateSavingsEntryInput,
 } from './types'
 
 /**
@@ -143,4 +151,43 @@ export function getDashboardSummary(month: string): Promise<DashboardSummary> {
 
 export function getSavingsTrend(month: string): Promise<SavingsTrendPoint[]> {
   return invoke<SavingsTrendPoint[]>('get_savings_trend', { month })
+}
+
+export function listGoals(includeArchived = false): Promise<Goal[]> {
+  return invoke<Goal[]>('list_goals', { includeArchived })
+}
+
+export function listGoalProgress(includeArchived = false): Promise<GoalProgress[]> {
+  return invoke<GoalProgress[]>('list_goal_progress', { includeArchived })
+}
+
+export function createGoal(input: CreateGoalInput): Promise<Goal> {
+  return invoke<Goal>('create_goal', { input })
+}
+
+export function updateGoal(id: string, input: UpdateGoalInput): Promise<Goal> {
+  return invoke<Goal>('update_goal', { id, input })
+}
+
+export function setGoalActive(id: string, active: boolean): Promise<Goal> {
+  return invoke<Goal>('set_goal_active', { id, active })
+}
+
+export function listSavingsEntries(filter: SavingsEntryFilter = {}): Promise<SavingsEntry[]> {
+  return invoke<SavingsEntry[]>('list_savings_entries', { filter })
+}
+
+export function createSavingsEntry(input: CreateSavingsEntryInput): Promise<SavingsEntry> {
+  return invoke<SavingsEntry>('create_savings_entry', { input })
+}
+
+export function updateSavingsEntry(
+  id: string,
+  input: UpdateSavingsEntryInput,
+): Promise<SavingsEntry> {
+  return invoke<SavingsEntry>('update_savings_entry', { id, input })
+}
+
+export function deleteSavingsEntry(id: string): Promise<void> {
+  return invoke<void>('delete_savings_entry', { id })
 }

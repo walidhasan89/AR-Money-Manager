@@ -53,6 +53,7 @@ function FadeInCard({ index, children }: FadeInCardProps) {
 export function DashboardScreen() {
   const showToast = useToastStore((s) => s.showToast)
   const expensesVersion = useDataEventsStore((s) => s.expensesVersion)
+  const savingsVersion = useDataEventsStore((s) => s.savingsVersion)
   const currentMonth = format(new Date(), 'yyyy-MM')
   const [month, setMonth] = useState(currentMonth)
   const [summary, setSummary] = useState<DashboardSummary | null>(null)
@@ -72,7 +73,7 @@ export function DashboardScreen() {
 
   useEffect(() => {
     refresh()
-  }, [refresh, expensesVersion])
+  }, [refresh, expensesVersion, savingsVersion])
 
   const ready = summary && summary.month === month && budgetSummary && budgetSummary.month === month
 

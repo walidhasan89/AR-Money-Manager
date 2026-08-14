@@ -79,6 +79,15 @@ pub fn run() {
             commands::budgets::copy_last_month_budget,
             commands::dashboard::get_dashboard_summary,
             commands::dashboard::get_savings_trend,
+            commands::goals::list_goals,
+            commands::goals::list_goal_progress,
+            commands::goals::create_goal,
+            commands::goals::update_goal,
+            commands::goals::set_goal_active,
+            commands::savings::list_savings_entries,
+            commands::savings::create_savings_entry,
+            commands::savings::update_savings_entry,
+            commands::savings::delete_savings_entry,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

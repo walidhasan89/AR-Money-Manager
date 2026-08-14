@@ -184,6 +184,75 @@ export interface SavingsTrendPoint {
   totalCents: number
 }
 
+export type GoalType = 'savings' | 'dps' | 'emergency_fund'
+
+export interface Goal {
+  id: string
+  name: string
+  type: GoalType
+  targetAmountCents: number | null
+  monthlyContributionCents: number | null
+  targetDate: string | null
+  isActive: boolean
+  createdAt: string
+  updatedAt: string
+}
+
+export interface CreateGoalInput {
+  name: string
+  type: GoalType
+  targetAmountCents: number | null
+  monthlyContributionCents: number | null
+  targetDate: string | null
+}
+
+export type UpdateGoalInput = CreateGoalInput
+
+export interface GoalProgress {
+  id: string
+  name: string
+  type: GoalType
+  targetAmountCents: number | null
+  monthlyContributionCents: number | null
+  targetDate: string | null
+  isActive: boolean
+  createdAt: string
+  contributedCents: number
+  progressPercent: number
+  projectedMaturityCents: number | null
+}
+
+export type SavingsEntryType = 'general' | 'dps' | 'emergency_fund' | 'goal'
+
+export interface SavingsEntry {
+  id: string
+  amountCents: number
+  type: SavingsEntryType
+  goalId: string | null
+  goalName: string | null
+  date: string
+  note: string | null
+  createdAt: string
+  updatedAt: string
+}
+
+export interface CreateSavingsEntryInput {
+  amountCents: number
+  type: SavingsEntryType
+  goalId: string | null
+  date: string
+  note: string | null
+}
+
+export type UpdateSavingsEntryInput = CreateSavingsEntryInput
+
+export interface SavingsEntryFilter {
+  dateFrom?: string
+  dateTo?: string
+  goalId?: string
+  entryType?: SavingsEntryType
+}
+
 export type AppErrorKind = 'validation' | 'notFound' | 'database' | 'io'
 
 export interface AppError {

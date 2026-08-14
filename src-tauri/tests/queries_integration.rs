@@ -5,10 +5,13 @@
 use app_lib::error::AppError;
 use app_lib::models::{
     ConfirmFixedExpenseInput, CreateCategoryInput, CreateExpenseInput, CreateFixedExpenseInput,
-    CreateIncomeInput, EntryFilter, SkipFixedExpenseInput, UpdateCategoryInput, UpdateExpenseInput,
-    UpdateFixedExpenseInput, UpdateIncomeInput,
+    CreateGoalInput, CreateIncomeInput, CreateSavingsEntryInput, EntryFilter, SavingsEntryFilter,
+    SkipFixedExpenseInput, UpdateCategoryInput, UpdateExpenseInput, UpdateFixedExpenseInput,
+    UpdateGoalInput, UpdateIncomeInput, UpdateSavingsEntryInput,
 };
-use app_lib::queries::{budgets, categories, dashboard, expenses, fixed_expenses, income};
+use app_lib::queries::{
+    budgets, categories, dashboard, expenses, fixed_expenses, goals, income, savings,
+};
 use chrono::NaiveDate;
 use sqlx::sqlite::{SqliteConnectOptions, SqlitePoolOptions};
 use sqlx::{Pool, Sqlite};
@@ -733,4 +736,251 @@ async fn savings_trend_covers_trailing_months_in_order() {
     assert_eq!(trend[1].total_cents, 0);
     assert_eq!(trend[2].month, "2026-08");
     assert_eq!(trend[2].total_cents, 20_000);
+}
+
+async fn insert_goal_with_created_at(
+    pool: &Pool<Sqlite>,
+    name: &str,
+    goal_type: &str,
+    monthly_contribution_cents: i64,
+    target_date: &str,
+    created_at: &str,
+) -> String {
+    let id = uuid::Uuid::new_v4().to_string();
+    sqlx::query(
+        "INSERT INTO goals (id, name, type, monthly_contribution_cents, target_date, created_at, updated_at) \
+         VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?6)",
+    )
+    .bind(&id)
+    .bind(name)
+    .bind(goal_type)
+    .bind(monthly_contribution_cents)
+    .bind(target_date)
+    .bind(created_at)
+    .execute(pool)
+    .await
+    .unwrap();
+    id
+}
+
+#[tokio::test]
+async fn goal_create_update_archive_round_trip() {
+    let (_dir, pool) = fresh_pool().await;
+
+    let created = goals::create(
+        &pool,
+        CreateGoalInput {
+            name: "Emergency Fund".into(),
+            goal_type: "emergency_fund".into(),
+            target_amount_cents: Some(1_000_000),
+            monthly_contribution_cents: None,
+            target_date: None,
+        },
+    )
+    .await
+    .unwrap();
+    assert_eq!(created.name, "Emergency Fund");
+    assert!(created.is_active);
+
+    let updated = goals::update(
+        &pool,
+        &created.id,
+        UpdateGoalInput {
+            name: "6-Month Emergency Fund".into(),
+            goal_type: "emergency_fund".into(),
+            target_amount_cents: Some(1_200_000),
+            monthly_contribution_cents: None,
+            target_date: None,
+        },
+    )
+    .await
+    .unwrap();
+    assert_eq!(updated.name, "6-Month Emergency Fund");
+    assert_eq!(updated.target_amount_cents, Some(1_200_000));
+
+    let archived = goals::set_active(&pool, &created.id, false).await.unwrap();
+    assert!(!archived.is_active);
+
+    let active_only = goals::list(&pool, false).await.unwrap();
+    assert!(!active_only.iter().any(|g| g.id == created.id));
+
+    let including_archived = goals::list(&pool, true).await.unwrap();
+    assert!(including_archived.iter().any(|g| g.id == created.id));
+}
+
+#[tokio::test]
+async fn goal_progress_aggregates_contributions_and_caps_at_100_percent() {
+    let (_dir, pool) = fresh_pool().await;
+
+    let goal = goals::create(
+        &pool,
+        CreateGoalInput {
+            name: "New Laptop".into(),
+            goal_type: "savings".into(),
+            target_amount_cents: Some(100_000),
+            monthly_contribution_cents: None,
+            target_date: None,
+        },
+    )
+    .await
+    .unwrap();
+
+    savings::create(
+        &pool,
+        CreateSavingsEntryInput {
+            amount_cents: 40_000,
+            entry_type: "goal".into(),
+            goal_id: Some(goal.id.clone()),
+            date: "2026-08-01".into(),
+            note: None,
+        },
+    )
+    .await
+    .unwrap();
+    savings::create(
+        &pool,
+        CreateSavingsEntryInput {
+            amount_cents: 90_000,
+            entry_type: "goal".into(),
+            goal_id: Some(goal.id.clone()),
+            date: "2026-08-15".into(),
+            note: None,
+        },
+    )
+    .await
+    .unwrap();
+
+    let today = NaiveDate::from_ymd_opt(2026, 8, 20).unwrap();
+    let progress = goals::list_progress(&pool, false, today).await.unwrap();
+    let goal_progress = progress.iter().find(|p| p.id == goal.id).unwrap();
+
+    assert_eq!(goal_progress.contributed_cents, 130_000, "40_000 + 90_000");
+    assert_eq!(
+        goal_progress.progress_percent, 100.0,
+        "contributions past target must cap at 100%, not overshoot"
+    );
+}
+
+#[tokio::test]
+async fn dps_goal_projects_maturity_from_installment_and_tenure() {
+    let (_dir, pool) = fresh_pool().await;
+
+    let goal_id = insert_goal_with_created_at(
+        &pool,
+        "DPS - 5yr",
+        "dps",
+        5_000,
+        "2031-01-01",
+        "2026-01-01T00:00:00.000Z",
+    )
+    .await;
+
+    let today = NaiveDate::from_ymd_opt(2026, 8, 1).unwrap();
+    let progress = goals::list_progress(&pool, false, today).await.unwrap();
+    let dps = progress.iter().find(|p| p.id == goal_id).unwrap();
+
+    assert_eq!(
+        dps.projected_maturity_cents,
+        Some(5_000 * 60),
+        "5_000/month across a 5-year (60-month) tenure"
+    );
+}
+
+#[tokio::test]
+async fn logging_a_contribution_updates_goal_progress_and_dashboard_savings_kpi() {
+    let (_dir, pool) = fresh_pool().await;
+
+    let goal = goals::create(
+        &pool,
+        CreateGoalInput {
+            name: "DPS - 3yr".into(),
+            goal_type: "dps".into(),
+            target_amount_cents: None,
+            monthly_contribution_cents: Some(5_000),
+            target_date: Some("2029-01-01".into()),
+        },
+    )
+    .await
+    .unwrap();
+
+    let before = dashboard::get_summary(&pool, "2026-08").await.unwrap();
+    assert_eq!(before.savings_cents, 0);
+
+    savings::create(
+        &pool,
+        CreateSavingsEntryInput {
+            amount_cents: 5_000,
+            entry_type: "dps".into(),
+            goal_id: Some(goal.id.clone()),
+            date: "2026-08-10".into(),
+            note: None,
+        },
+    )
+    .await
+    .unwrap();
+
+    let today = NaiveDate::from_ymd_opt(2026, 8, 10).unwrap();
+    let progress = goals::list_progress(&pool, false, today).await.unwrap();
+    let goal_progress = progress.iter().find(|p| p.id == goal.id).unwrap();
+    assert_eq!(goal_progress.contributed_cents, 5_000);
+
+    let after = dashboard::get_summary(&pool, "2026-08").await.unwrap();
+    assert_eq!(
+        after.savings_cents, 5_000,
+        "the dashboard's Savings KPI must reflect the new contribution immediately"
+    );
+}
+
+#[tokio::test]
+async fn savings_entries_can_be_created_listed_updated_and_soft_deleted() {
+    let (_dir, pool) = fresh_pool().await;
+
+    let created = savings::create(
+        &pool,
+        CreateSavingsEntryInput {
+            amount_cents: 10_000,
+            entry_type: "general".into(),
+            goal_id: None,
+            date: "2026-08-05".into(),
+            note: Some("ad-hoc top-up".into()),
+        },
+    )
+    .await
+    .unwrap();
+    assert_eq!(created.entry_type, "general");
+    assert!(created.goal_id.is_none());
+
+    let updated = savings::update(
+        &pool,
+        &created.id,
+        UpdateSavingsEntryInput {
+            amount_cents: 12_000,
+            entry_type: "general".into(),
+            goal_id: None,
+            date: "2026-08-05".into(),
+            note: Some("ad-hoc top-up, corrected".into()),
+        },
+    )
+    .await
+    .unwrap();
+    assert_eq!(updated.amount_cents, 12_000);
+
+    let filtered = savings::list(
+        &pool,
+        &SavingsEntryFilter {
+            date_from: Some("2026-08-01".into()),
+            date_to: Some("2026-08-31".into()),
+            goal_id: None,
+            entry_type: Some("general".into()),
+        },
+    )
+    .await
+    .unwrap();
+    assert_eq!(filtered.len(), 1);
+
+    savings::soft_delete(&pool, &created.id).await.unwrap();
+    let after_delete = savings::list(&pool, &SavingsEntryFilter::default())
+        .await
+        .unwrap();
+    assert!(!after_delete.iter().any(|e| e.id == created.id));
 }

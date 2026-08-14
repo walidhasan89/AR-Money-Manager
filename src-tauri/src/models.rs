@@ -249,3 +249,108 @@ pub struct SavingsTrendPoint {
     pub month: String,
     pub total_cents: i64,
 }
+
+#[derive(Debug, Clone, Serialize, sqlx::FromRow)]
+#[serde(rename_all = "camelCase")]
+pub struct Goal {
+    pub id: String,
+    pub name: String,
+    #[sqlx(rename = "type")]
+    #[serde(rename = "type")]
+    pub goal_type: String,
+    pub target_amount_cents: Option<i64>,
+    pub monthly_contribution_cents: Option<i64>,
+    pub target_date: Option<String>,
+    pub is_active: bool,
+    pub created_at: String,
+    pub updated_at: String,
+}
+
+#[derive(Debug, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct CreateGoalInput {
+    pub name: String,
+    #[serde(rename = "type")]
+    pub goal_type: String,
+    pub target_amount_cents: Option<i64>,
+    pub monthly_contribution_cents: Option<i64>,
+    pub target_date: Option<String>,
+}
+
+#[derive(Debug, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct UpdateGoalInput {
+    pub name: String,
+    #[serde(rename = "type")]
+    pub goal_type: String,
+    pub target_amount_cents: Option<i64>,
+    pub monthly_contribution_cents: Option<i64>,
+    pub target_date: Option<String>,
+}
+
+/// A goal plus its contributions-to-date, with derived progress/projection
+/// figures computed in Rust from already-SQL-aggregated `contributed_cents`
+/// (never by summing raw rows client-side, per `ARCHITECTURE.md`).
+#[derive(Debug, Clone, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct GoalProgress {
+    pub id: String,
+    pub name: String,
+    #[serde(rename = "type")]
+    pub goal_type: String,
+    pub target_amount_cents: Option<i64>,
+    pub monthly_contribution_cents: Option<i64>,
+    pub target_date: Option<String>,
+    pub is_active: bool,
+    pub created_at: String,
+    pub contributed_cents: i64,
+    pub progress_percent: f64,
+    pub projected_maturity_cents: Option<i64>,
+}
+
+#[derive(Debug, Clone, Serialize, sqlx::FromRow)]
+#[serde(rename_all = "camelCase")]
+pub struct SavingsEntry {
+    pub id: String,
+    pub amount_cents: i64,
+    #[sqlx(rename = "type")]
+    #[serde(rename = "type")]
+    pub entry_type: String,
+    pub goal_id: Option<String>,
+    pub goal_name: Option<String>,
+    pub date: String,
+    pub note: Option<String>,
+    pub created_at: String,
+    pub updated_at: String,
+}
+
+#[derive(Debug, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct CreateSavingsEntryInput {
+    pub amount_cents: i64,
+    #[serde(rename = "type")]
+    pub entry_type: String,
+    pub goal_id: Option<String>,
+    pub date: String,
+    pub note: Option<String>,
+}
+
+#[derive(Debug, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct UpdateSavingsEntryInput {
+    pub amount_cents: i64,
+    #[serde(rename = "type")]
+    pub entry_type: String,
+    pub goal_id: Option<String>,
+    pub date: String,
+    pub note: Option<String>,
+}
+
+#[derive(Debug, Default, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct SavingsEntryFilter {
+    pub date_from: Option<String>,
+    pub date_to: Option<String>,
+    pub goal_id: Option<String>,
+    pub entry_type: Option<String>,
+}
