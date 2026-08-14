@@ -5,6 +5,12 @@
  */
 
 :root {
+  /* Tells the engine to paint native widgets (select chrome + its option
+     list, scrollbars) dark instead of the OS/browser light default — without
+     this, <select> renders as a near-white box with pale text regardless of
+     our own text/background classes, since those don't reach native chrome. */
+  color-scheme: dark;
+
   /* Background */
   --bg-base: #0a0e17;
   --bg-gradient-start: #101828;
@@ -43,6 +49,8 @@
 }
 
 [data-theme='light'] {
+  color-scheme: light;
+
   --bg-base: #f4f5fa;
   --bg-gradient-start: #ffffff;
   --bg-gradient-end: #f4f5fa;
