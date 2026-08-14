@@ -17,6 +17,7 @@ import type {
   GoalProgress,
   Income,
   PendingFixedExpense,
+  ReportSummary,
   SavingsEntry,
   SavingsEntryFilter,
   SavingsTrendPoint,
@@ -190,4 +191,12 @@ export function updateSavingsEntry(
 
 export function deleteSavingsEntry(id: string): Promise<void> {
   return invoke<void>('delete_savings_entry', { id })
+}
+
+export function getReportSummary(month: string): Promise<ReportSummary> {
+  return invoke<ReportSummary>('get_report_summary', { month })
+}
+
+export function exportReportCsv(path: string, month: string): Promise<void> {
+  return invoke<void>('export_report_csv', { path, month })
 }

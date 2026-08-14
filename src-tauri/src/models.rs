@@ -354,3 +354,35 @@ pub struct SavingsEntryFilter {
     pub goal_id: Option<String>,
     pub entry_type: Option<String>,
 }
+
+/// One row of the report's category breakdown. `spent_cents` is always
+/// sourced from the same complete per-category spend query the Dashboard
+/// donut uses, so `categories.map(spent_cents).sum()` always equals
+/// `ReportSummary.expenses_cents` exactly — including for a category
+/// that's since been archived, which a budget-scoped (active-only) query
+/// would silently drop.
+#[derive(Debug, Clone, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct ReportCategoryBreakdown {
+    pub category_id: String,
+    pub category_name: String,
+    pub category_color: String,
+    pub spent_cents: i64,
+    pub budget_cents: i64,
+}
+
+/// A monthly report. Built by combining `dashboard::get_summary` and
+/// `budgets::get_summary` rather than re-querying — so the report can
+/// never drift from the numbers already shown on the Dashboard.
+#[derive(Debug, Clone, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct ReportSummary {
+    pub month: String,
+    pub income_cents: i64,
+    pub expenses_cents: i64,
+    pub savings_cents: i64,
+    pub remaining_cents: i64,
+    pub overall_budget_cents: i64,
+    pub overall_spent_cents: i64,
+    pub categories: Vec<ReportCategoryBreakdown>,
+}

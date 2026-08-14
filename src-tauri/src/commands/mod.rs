@@ -6,5 +6,6 @@ pub mod expenses;
 pub mod fixed_expenses;
 pub mod goals;
 pub mod income;
+pub mod reports;
 pub mod savings;
 pub mod system;

@@ -10,7 +10,7 @@ use app_lib::models::{
     UpdateGoalInput, UpdateIncomeInput, UpdateSavingsEntryInput,
 };
 use app_lib::queries::{
-    budgets, categories, dashboard, expenses, fixed_expenses, goals, income, savings,
+    budgets, categories, dashboard, expenses, fixed_expenses, goals, income, reports, savings,
 };
 use chrono::NaiveDate;
 use sqlx::sqlite::{SqliteConnectOptions, SqlitePoolOptions};
@@ -983,4 +983,168 @@ async fn savings_entries_can_be_created_listed_updated_and_soft_deleted() {
         .await
         .unwrap();
     assert!(!after_delete.iter().any(|e| e.id == created.id));
+}
+
+#[tokio::test]
+async fn report_matches_dashboard_summary_for_same_month() {
+    let (_dir, pool) = fresh_pool().await;
+
+    income::create(
+        &pool,
+        CreateIncomeInput {
+            amount_cents: 500_000,
+            category_id: SALARY.into(),
+            source: None,
+            date: "2026-08-01".into(),
+            note: None,
+        },
+    )
+    .await
+    .unwrap();
+    expenses::create(
+        &pool,
+        CreateExpenseInput {
+            amount_cents: 15_000,
+            category_id: GROCERIES.into(),
+            date: "2026-08-05".into(),
+            note: None,
+        },
+    )
+    .await
+    .unwrap();
+    insert_savings_entry(&pool, 10_000, "2026-08-10").await;
+    budgets::set_overall_budget(&pool, "2026-08", 200_000)
+        .await
+        .unwrap();
+
+    let dashboard_summary = dashboard::get_summary(&pool, "2026-08").await.unwrap();
+    let report = reports::get_report(&pool, "2026-08").await.unwrap();
+
+    assert_eq!(report.income_cents, dashboard_summary.income_cents);
+    assert_eq!(report.expenses_cents, dashboard_summary.expenses_cents);
+    assert_eq!(report.savings_cents, dashboard_summary.savings_cents);
+    assert_eq!(report.remaining_cents, dashboard_summary.remaining_cents);
+}
+
+#[tokio::test]
+async fn report_category_breakdown_sums_to_total_expenses_including_archived_categories() {
+    let (_dir, pool) = fresh_pool().await;
+
+    let side_category = categories::create(
+        &pool,
+        CreateCategoryInput {
+            name: "One-off".into(),
+            category_type: "expense".into(),
+            icon: "more-horizontal".into(),
+            color: "#9AA3B2".into(),
+        },
+    )
+    .await
+    .unwrap();
+
+    expenses::create(
+        &pool,
+        CreateExpenseInput {
+            amount_cents: 20_000,
+            category_id: GROCERIES.into(),
+            date: "2026-08-05".into(),
+            note: None,
+        },
+    )
+    .await
+    .unwrap();
+    expenses::create(
+        &pool,
+        CreateExpenseInput {
+            amount_cents: 7_500,
+            category_id: side_category.id.clone(),
+            date: "2026-08-06".into(),
+            note: None,
+        },
+    )
+    .await
+    .unwrap();
+
+    // Archive the category *after* it has spend — a budget-scoped
+    // (active-only) query would silently drop this category's spend from
+    // the breakdown, which would break the "sums to total" invariant.
+    categories::set_archived(&pool, &side_category.id, true)
+        .await
+        .unwrap();
+
+    let report = reports::get_report(&pool, "2026-08").await.unwrap();
+    let breakdown_total: i64 = report.categories.iter().map(|c| c.spent_cents).sum();
+
+    assert_eq!(breakdown_total, report.expenses_cents);
+    assert_eq!(report.expenses_cents, 27_500);
+    assert!(
+        report
+            .categories
+            .iter()
+            .any(|c| c.category_id == side_category.id),
+        "an archived category with spend this month must still appear in the breakdown"
+    );
+}
+
+#[tokio::test]
+async fn report_csv_export_is_well_formed_and_contains_expected_totals() {
+    let (_dir, pool) = fresh_pool().await;
+
+    income::create(
+        &pool,
+        CreateIncomeInput {
+            amount_cents: 500_000,
+            category_id: SALARY.into(),
+            source: None,
+            date: "2026-08-01".into(),
+            note: None,
+        },
+    )
+    .await
+    .unwrap();
+    expenses::create(
+        &pool,
+        CreateExpenseInput {
+            amount_cents: 15_000,
+            category_id: GROCERIES.into(),
+            date: "2026-08-05".into(),
+            note: None,
+        },
+    )
+    .await
+    .unwrap();
+    budgets::set_category_budget(&pool, "2026-08", GROCERIES, 20_000)
+        .await
+        .unwrap();
+
+    let report = reports::get_report(&pool, "2026-08").await.unwrap();
+
+    let mut buffer: Vec<u8> = Vec::new();
+    reports::write_report_csv(&mut buffer, &report).unwrap();
+
+    let mut reader = csv::ReaderBuilder::new()
+        .flexible(true)
+        .has_headers(false)
+        .from_reader(buffer.as_slice());
+    let records: Vec<csv::StringRecord> = reader.records().map(|r| r.unwrap()).collect();
+
+    let find_metric = |name: &str| -> String {
+        records
+            .iter()
+            .find(|r| r.get(0) == Some(name))
+            .unwrap_or_else(|| panic!("missing metric row: {name}"))
+            .get(1)
+            .unwrap()
+            .to_string()
+    };
+    assert_eq!(find_metric("Month"), "2026-08");
+    assert_eq!(find_metric("Income"), "5000.00");
+    assert_eq!(find_metric("Expenses"), "150.00");
+
+    let groceries_row = records
+        .iter()
+        .find(|r| r.get(0) == Some("Groceries"))
+        .expect("category breakdown row for Groceries");
+    assert_eq!(groceries_row.get(1), Some("150.00"), "spent");
+    assert_eq!(groceries_row.get(2), Some("200.00"), "budget");
 }

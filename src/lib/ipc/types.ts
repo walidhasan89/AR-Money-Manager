@@ -253,6 +253,25 @@ export interface SavingsEntryFilter {
   entryType?: SavingsEntryType
 }
 
+export interface ReportCategoryBreakdown {
+  categoryId: string
+  categoryName: string
+  categoryColor: string
+  spentCents: number
+  budgetCents: number
+}
+
+export interface ReportSummary {
+  month: string
+  incomeCents: number
+  expensesCents: number
+  savingsCents: number
+  remainingCents: number
+  overallBudgetCents: number
+  overallSpentCents: number
+  categories: ReportCategoryBreakdown[]
+}
+
 export type AppErrorKind = 'validation' | 'notFound' | 'database' | 'io'
 
 export interface AppError {

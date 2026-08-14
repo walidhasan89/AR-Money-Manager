@@ -7,7 +7,7 @@ use crate::error::AppResult;
 use crate::models::EntryFilter;
 use crate::queries;
 
-fn cents_to_decimal_string(cents: i64) -> String {
+pub(crate) fn cents_to_decimal_string(cents: i64) -> String {
     let sign = if cents < 0 { "-" } else { "" };
     let abs = cents.unsigned_abs();
     format!("{sign}{}.{:02}", abs / 100, abs % 100)
@@ -71,5 +71,15 @@ pub async fn export_income_csv(app: AppHandle, path: String, filter: EntryFilter
         ])?;
     }
     writer.flush()?;
+    Ok(())
+}
+
+#[tauri::command]
+pub async fn export_report_csv(app: AppHandle, path: String, month: String) -> AppResult<()> {
+    let pool = db::pool(&app).await?;
+    let report = queries::reports::get_report(&pool, &month).await?;
+
+    let file = File::create(&path)?;
+    queries::reports::write_report_csv(file, &report)?;
     Ok(())
 }

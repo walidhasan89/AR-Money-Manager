@@ -88,6 +88,8 @@ pub fn run() {
             commands::savings::create_savings_entry,
             commands::savings::update_savings_entry,
             commands::savings::delete_savings_entry,
+            commands::reports::get_report_summary,
+            commands::csv_export::export_report_csv,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
