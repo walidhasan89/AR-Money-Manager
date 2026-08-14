@@ -129,6 +129,33 @@ export interface SkipFixedExpenseInput {
   month: string
 }
 
+export interface CategoryBudget {
+  categoryId: string
+  categoryName: string
+  categoryColor: string
+  categoryIcon: string
+  budgetCents: number
+  spentCents: number
+}
+
+export interface BudgetSummary {
+  month: string
+  overallBudgetCents: number
+  overallSpentCents: number
+  categories: CategoryBudget[]
+}
+
+export interface SetOverallBudgetInput {
+  month: string
+  amountCents: number
+}
+
+export interface SetCategoryBudgetInput {
+  month: string
+  categoryId: string
+  amountCents: number
+}
+
 export type AppErrorKind = 'validation' | 'notFound' | 'database' | 'io'
 
 export interface AppError {

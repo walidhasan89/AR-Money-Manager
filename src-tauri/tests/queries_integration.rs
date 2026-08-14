@@ -8,7 +8,7 @@ use app_lib::models::{
     CreateIncomeInput, EntryFilter, SkipFixedExpenseInput, UpdateCategoryInput, UpdateExpenseInput,
     UpdateFixedExpenseInput, UpdateIncomeInput,
 };
-use app_lib::queries::{categories, expenses, fixed_expenses, income};
+use app_lib::queries::{budgets, categories, expenses, fixed_expenses, income};
 use chrono::NaiveDate;
 use sqlx::sqlite::{SqliteConnectOptions, SqlitePoolOptions};
 use sqlx::{Pool, Sqlite};
@@ -426,4 +426,158 @@ async fn deactivating_a_fixed_expense_template_removes_it_from_pending() {
         .await
         .unwrap();
     assert!(pending.is_empty());
+}
+
+#[tokio::test]
+async fn budget_summary_aggregates_spend_per_category_and_overall() {
+    let (_dir, pool) = fresh_pool().await;
+
+    expenses::create(
+        &pool,
+        CreateExpenseInput {
+            amount_cents: 5_000,
+            category_id: GROCERIES.into(),
+            date: "2026-08-01".into(),
+            note: None,
+        },
+    )
+    .await
+    .unwrap();
+    expenses::create(
+        &pool,
+        CreateExpenseInput {
+            amount_cents: 3_000,
+            category_id: GROCERIES.into(),
+            date: "2026-08-15".into(),
+            note: None,
+        },
+    )
+    .await
+    .unwrap();
+    // Different month — must not be counted.
+    expenses::create(
+        &pool,
+        CreateExpenseInput {
+            amount_cents: 99_000,
+            category_id: GROCERIES.into(),
+            date: "2026-07-15".into(),
+            note: None,
+        },
+    )
+    .await
+    .unwrap();
+
+    budgets::set_overall_budget(&pool, "2026-08", 100_000)
+        .await
+        .unwrap();
+    let summary = budgets::set_category_budget(&pool, "2026-08", GROCERIES, 10_000)
+        .await
+        .unwrap();
+
+    assert_eq!(summary.overall_budget_cents, 100_000);
+    assert_eq!(
+        summary.overall_spent_cents, 8_000,
+        "only August expenses count"
+    );
+
+    let groceries = summary
+        .categories
+        .iter()
+        .find(|c| c.category_id == GROCERIES)
+        .unwrap();
+    assert_eq!(groceries.budget_cents, 10_000);
+    assert_eq!(groceries.spent_cents, 8_000);
+
+    let house_rent = summary
+        .categories
+        .iter()
+        .find(|c| c.category_id == HOUSE_RENT)
+        .unwrap();
+    assert_eq!(house_rent.budget_cents, 0, "no budget set yet");
+    assert_eq!(house_rent.spent_cents, 0, "no spend yet");
+}
+
+#[tokio::test]
+async fn setting_a_budget_twice_updates_in_place_not_duplicates() {
+    let (_dir, pool) = fresh_pool().await;
+
+    budgets::set_overall_budget(&pool, "2026-08", 50_000)
+        .await
+        .unwrap();
+    let summary = budgets::set_overall_budget(&pool, "2026-08", 75_000)
+        .await
+        .unwrap();
+    assert_eq!(summary.overall_budget_cents, 75_000);
+
+    let row_count: i64 = sqlx::query_scalar(
+        "SELECT COUNT(*) FROM budgets WHERE month = '2026-08' AND category_id IS NULL",
+    )
+    .fetch_one(&pool)
+    .await
+    .unwrap();
+    assert_eq!(
+        row_count, 1,
+        "re-setting the overall budget must not duplicate the row"
+    );
+
+    budgets::set_category_budget(&pool, "2026-08", GROCERIES, 10_000)
+        .await
+        .unwrap();
+    let summary = budgets::set_category_budget(&pool, "2026-08", GROCERIES, 20_000)
+        .await
+        .unwrap();
+    let groceries = summary
+        .categories
+        .iter()
+        .find(|c| c.category_id == GROCERIES)
+        .unwrap();
+    assert_eq!(groceries.budget_cents, 20_000);
+
+    let category_row_count: i64 = sqlx::query_scalar(
+        "SELECT COUNT(*) FROM budgets WHERE month = '2026-08' AND category_id = ?1",
+    )
+    .bind(GROCERIES)
+    .fetch_one(&pool)
+    .await
+    .unwrap();
+    assert_eq!(category_row_count, 1);
+}
+
+#[tokio::test]
+async fn copy_last_month_duplicates_prior_budgets() {
+    let (_dir, pool) = fresh_pool().await;
+
+    let copied_when_empty = budgets::copy_last_month(&pool, "2026-08").await.unwrap();
+    assert_eq!(
+        copied_when_empty, 0,
+        "nothing to copy when July has no budget"
+    );
+
+    budgets::set_overall_budget(&pool, "2026-07", 100_000)
+        .await
+        .unwrap();
+    budgets::set_category_budget(&pool, "2026-07", GROCERIES, 15_000)
+        .await
+        .unwrap();
+    budgets::set_category_budget(&pool, "2026-07", HOUSE_RENT, 50_000)
+        .await
+        .unwrap();
+
+    let copied = budgets::copy_last_month(&pool, "2026-08").await.unwrap();
+    assert_eq!(copied, 3);
+
+    let summary = budgets::get_summary(&pool, "2026-08").await.unwrap();
+    assert_eq!(summary.overall_budget_cents, 100_000);
+    let groceries = summary
+        .categories
+        .iter()
+        .find(|c| c.category_id == GROCERIES)
+        .unwrap();
+    assert_eq!(groceries.budget_cents, 15_000);
+    let house_rent = summary
+        .categories
+        .iter()
+        .find(|c| c.category_id == HOUSE_RENT)
+        .unwrap();
+    assert_eq!(house_rent.budget_cents, 50_000);
 }

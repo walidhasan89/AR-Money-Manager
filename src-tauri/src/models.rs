@@ -178,3 +178,38 @@ pub struct SkipFixedExpenseInput {
     pub fixed_expense_id: String,
     pub month: String,
 }
+
+#[derive(Debug, Clone, Serialize, sqlx::FromRow)]
+#[serde(rename_all = "camelCase")]
+pub struct CategoryBudget {
+    pub category_id: String,
+    pub category_name: String,
+    pub category_color: String,
+    pub category_icon: String,
+    pub budget_cents: i64,
+    pub spent_cents: i64,
+}
+
+#[derive(Debug, Clone, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct BudgetSummary {
+    pub month: String,
+    pub overall_budget_cents: i64,
+    pub overall_spent_cents: i64,
+    pub categories: Vec<CategoryBudget>,
+}
+
+#[derive(Debug, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct SetOverallBudgetInput {
+    pub month: String,
+    pub amount_cents: i64,
+}
+
+#[derive(Debug, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct SetCategoryBudgetInput {
+    pub month: String,
+    pub category_id: String,
+    pub amount_cents: i64,
+}

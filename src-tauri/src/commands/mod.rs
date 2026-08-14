@@ -1,3 +1,4 @@
+pub mod budgets;
 pub mod categories;
 pub mod csv_export;
 pub mod expenses;

@@ -72,6 +72,10 @@ pub fn run() {
             commands::fixed_expenses::skip_fixed_expense,
             commands::csv_export::export_expenses_csv,
             commands::csv_export::export_income_csv,
+            commands::budgets::get_budget_summary,
+            commands::budgets::set_overall_budget,
+            commands::budgets::set_category_budget,
+            commands::budgets::copy_last_month_budget,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

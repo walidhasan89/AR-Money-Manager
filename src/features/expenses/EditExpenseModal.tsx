@@ -12,6 +12,7 @@ import { parseAmountToCents } from '../../lib/format/currency'
 import { getErrorMessage } from '../../lib/ipc/types'
 import type { Category, Expense } from '../../lib/ipc/types'
 import { useToastStore } from '../../store/toastStore'
+import { useDataEventsStore } from '../../store/dataEventsStore'
 
 const schema = z.object({
   amount: z.string().refine((v) => parseAmountToCents(v) !== null, 'Enter a valid amount'),
@@ -29,6 +30,7 @@ interface EditExpenseModalProps {
 
 export function EditExpenseModal({ expense, onClose, onSaved }: EditExpenseModalProps) {
   const showToast = useToastStore((s) => s.showToast)
+  const bumpExpensesVersion = useDataEventsStore((s) => s.bumpExpensesVersion)
   const [categories, setCategories] = useState<Category[]>([])
 
   const {
@@ -64,6 +66,7 @@ export function EditExpenseModal({ expense, onClose, onSaved }: EditExpenseModal
         date: values.date,
         note: values.note.trim() ? values.note.trim() : null,
       })
+      bumpExpensesVersion()
       showToast('Expense updated')
       onSaved()
       onClose()

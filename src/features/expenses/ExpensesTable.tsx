@@ -17,6 +17,7 @@ import { getErrorMessage } from '../../lib/ipc/types'
 import type { Category, Expense } from '../../lib/ipc/types'
 import { useExpensesFilterStore } from '../../store/expensesFilterStore'
 import { useToastStore } from '../../store/toastStore'
+import { useDataEventsStore } from '../../store/dataEventsStore'
 import { useUiStore } from '../../store/uiStore'
 import { EditExpenseModal } from './EditExpenseModal'
 
@@ -25,6 +26,7 @@ export function ExpensesTable() {
   const setFilter = useExpensesFilterStore((s) => s.setFilter)
   const showToast = useToastStore((s) => s.showToast)
   const openQuickAdd = useUiStore((s) => s.openQuickAdd)
+  const bumpExpensesVersion = useDataEventsStore((s) => s.bumpExpensesVersion)
 
   const [categories, setCategories] = useState<Category[]>([])
   const [expenses, setExpenses] = useState<Expense[]>([])
@@ -69,6 +71,7 @@ export function ExpensesTable() {
     if (!deleting) return
     try {
       await deleteExpense(deleting.id)
+      bumpExpensesVersion()
       showToast('Expense deleted')
       setDeleting(null)
       refresh()

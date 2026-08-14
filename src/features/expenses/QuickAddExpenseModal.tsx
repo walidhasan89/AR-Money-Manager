@@ -14,6 +14,7 @@ import { getErrorMessage } from '../../lib/ipc/types'
 import type { Category } from '../../lib/ipc/types'
 import { useUiStore } from '../../store/uiStore'
 import { useToastStore } from '../../store/toastStore'
+import { useDataEventsStore } from '../../store/dataEventsStore'
 
 const schema = z.object({
   amount: z.string().refine((v) => parseAmountToCents(v) !== null, 'Enter a valid amount'),
@@ -33,6 +34,7 @@ export function QuickAddExpenseModal() {
   const lastUsedCategoryId = useUiStore((s) => s.lastUsedExpenseCategoryId)
   const setLastUsedCategoryId = useUiStore((s) => s.setLastUsedExpenseCategoryId)
   const showToast = useToastStore((s) => s.showToast)
+  const bumpExpensesVersion = useDataEventsStore((s) => s.bumpExpensesVersion)
 
   const [categories, setCategories] = useState<Category[]>([])
   const [noteOpen, setNoteOpen] = useState(false)
@@ -92,6 +94,7 @@ export function QuickAddExpenseModal() {
         note: values.note.trim() ? values.note.trim() : null,
       })
       setLastUsedCategoryId(values.categoryId)
+      bumpExpensesVersion()
       showToast('Expense added')
       handleClose()
     } catch (error) {

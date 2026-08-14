@@ -1,5 +1,6 @@
 import { invoke } from '@tauri-apps/api/core'
 import type {
+  BudgetSummary,
   Category,
   ConfirmFixedExpenseInput,
   CreateCategoryInput,
@@ -11,6 +12,8 @@ import type {
   FixedExpense,
   Income,
   PendingFixedExpense,
+  SetCategoryBudgetInput,
+  SetOverallBudgetInput,
   SkipFixedExpenseInput,
   UpdateCategoryInput,
   UpdateExpenseInput,
@@ -114,4 +117,20 @@ export function exportExpensesCsv(path: string, filter: EntryFilter = {}): Promi
 
 export function exportIncomeCsv(path: string, filter: EntryFilter = {}): Promise<void> {
   return invoke<void>('export_income_csv', { path, filter })
+}
+
+export function getBudgetSummary(month: string): Promise<BudgetSummary> {
+  return invoke<BudgetSummary>('get_budget_summary', { month })
+}
+
+export function setOverallBudget(input: SetOverallBudgetInput): Promise<BudgetSummary> {
+  return invoke<BudgetSummary>('set_overall_budget', { input })
+}
+
+export function setCategoryBudget(input: SetCategoryBudgetInput): Promise<BudgetSummary> {
+  return invoke<BudgetSummary>('set_category_budget', { input })
+}
+
+export function copyLastMonthBudget(month: string): Promise<number> {
+  return invoke<number>('copy_last_month_budget', { month })
 }

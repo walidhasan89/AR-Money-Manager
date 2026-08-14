@@ -10,6 +10,7 @@ import { parseAmountToCents } from '../../lib/format/currency'
 import { getErrorMessage } from '../../lib/ipc/types'
 import type { PendingFixedExpense } from '../../lib/ipc/types'
 import { useToastStore } from '../../store/toastStore'
+import { useDataEventsStore } from '../../store/dataEventsStore'
 
 const schema = z.object({
   amount: z.string().refine((v) => parseAmountToCents(v) !== null, 'Enter a valid amount'),
@@ -34,6 +35,7 @@ function ConfirmFixedExpenseBody({
   onConfirmed: () => void
 }) {
   const showToast = useToastStore((s) => s.showToast)
+  const bumpExpensesVersion = useDataEventsStore((s) => s.bumpExpensesVersion)
   const {
     control,
     register,
@@ -58,6 +60,7 @@ function ConfirmFixedExpenseBody({
         date: values.date,
         note: values.note.trim() ? values.note.trim() : null,
       })
+      bumpExpensesVersion()
       showToast(`${pending.name} confirmed`)
       onConfirmed()
       onClose()
