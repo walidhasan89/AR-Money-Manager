@@ -8,9 +8,11 @@ All notable changes to this project are documented here, following [Keep a Chang
 - Settings → Currency picker (`CurrencySelector`, `currencyStore.ts`): switches the symbol `formatCurrency()`/`AmountInput` use everywhere — display only, amounts are never converted (see `docs/product/ASSUMPTIONS.md`).
 - 25 more category icons (`lib/icons.ts`), including money/finance icons (`DollarSign`, `Banknote`, `Coins`, `CreditCard`, `PiggyBank`, `Landmark`, `HandCoins`, `BadgeDollarSign`, `Receipt`) and lifestyle icons (travel, education, fitness, pets, hobbies) — the "New Category" icon picker had noticeably too few options.
 - Sidebar: a distinct accent color per nav icon (from the same palette user categories use), and a "© Walid Hasan" footer at the bottom.
+- Page/route transition animation (`Layout.tsx`): switching sidebar tabs now fades + slides the new screen in, per `docs/ui-ux/DESIGN_SYSTEM.md`'s spec (200ms ease-out) — previously unwired, so navigation was an instant cut.
 
 ### Changed
 - Renamed the app from "Personal Finance Manager" to "AR Personal Finance" (window title, `tauri.conf.json` productName, sidebar header, README) — the Tauri app identifier (`com.arfinance.desktop`) is left unchanged so existing installs/data directories aren't orphaned.
+- Settings → Currency picker is now a custom glass-styled listbox (`CurrencySelector.tsx`) instead of a native `<select>`, matching `CommandPalette`'s look — the native control never picked up the app's design tokens for its dropdown panel.
 
 ### Fixed
 - Every modal (Quick Add, Edit forms, Confirm dialogs, Command Palette, etc.) reused `.glass-card`'s very low opacity (6% white in dark mode), relying on `backdrop-filter` blur to stay legible over the content behind it. On hosts where that blur renders weaker (observed on Windows WebView2), background text bled straight through, making stacked form fields/table rows look like garbled overlapping text. Added a dedicated, solidly opaque `.glass-modal` class (96% opacity) used by every modal panel instead, plus a darker backdrop overlay.
