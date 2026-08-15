@@ -19,7 +19,7 @@ export function SidebarFooter() {
   }, [])
 
   return (
-    <div className="text-text-secondary flex flex-col gap-0.5 px-3 pb-1 text-xs">
+    <div className="text-text-secondary flex flex-col gap-0.5 text-xs">
       <span>
         ©{' '}
         <button

@@ -63,7 +63,7 @@ export function CalendarScreen() {
         </div>
       </div>
 
-      <GlassCard>
+      <GlassCard className="p-4">
         {days === null ? (
           <p className="text-text-secondary text-sm">Loading…</p>
         ) : !hasActivity ? (
@@ -73,7 +73,7 @@ export function CalendarScreen() {
             description="Income and expenses for this month will appear on their dates once you log them."
           />
         ) : (
-          <div className="flex flex-col gap-4">
+          <div className="flex flex-col gap-2">
             <div className="flex items-center gap-4">
               <span className="text-text-secondary flex items-center gap-1.5 text-xs">
                 <span className="bg-accent-success size-2 rounded-full" aria-hidden />
@@ -85,11 +85,14 @@ export function CalendarScreen() {
               </span>
             </div>
 
-            <div className="grid grid-cols-7 gap-2">
+            {/* Fixed-height rows sized to fit a 6-week month with no page
+                scroll (found via manual testing — the previous min-h-24
+                cells overflowed on 6-row months). */}
+            <div className="grid grid-cols-7 gap-1">
               {WEEKDAY_LABELS.map((label) => (
                 <div
                   key={label}
-                  className="text-text-secondary py-1 text-center text-xs font-medium tracking-wide uppercase"
+                  className="text-text-secondary py-0.5 text-center text-[11px] font-medium tracking-wide uppercase"
                 >
                   {label}
                 </div>
@@ -104,7 +107,7 @@ export function CalendarScreen() {
                 return (
                   <div
                     key={day.date}
-                    className={`border-glass-border flex min-h-24 flex-col gap-1 rounded-control border p-2 transition-colors ${
+                    className={`border-glass-border flex h-16 flex-col gap-0.5 rounded-control border p-1 transition-colors ${
                       isToday
                         ? 'border-accent-primary bg-accent-primary/10'
                         : hasEntries
@@ -113,19 +116,19 @@ export function CalendarScreen() {
                     }`}
                   >
                     <span
-                      className={`text-xs tabular-nums ${
+                      className={`text-[11px] tabular-nums ${
                         isToday ? 'text-accent-primary font-semibold' : 'text-text-secondary'
                       }`}
                     >
                       {dayNumber}
                     </span>
                     {day.incomeCents > 0 && (
-                      <span className="text-accent-success text-[11px] leading-tight font-semibold tabular-nums break-words">
+                      <span className="text-accent-success truncate text-[9px] leading-tight font-semibold tabular-nums">
                         +{formatCurrency(day.incomeCents)}
                       </span>
                     )}
                     {day.expenseCents > 0 && (
-                      <span className="text-accent-danger text-[11px] leading-tight font-semibold tabular-nums break-words">
+                      <span className="text-accent-danger truncate text-[9px] leading-tight font-semibold tabular-nums">
                         -{formatCurrency(day.expenseCents)}
                       </span>
                     )}
