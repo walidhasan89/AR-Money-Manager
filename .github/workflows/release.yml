@@ -1,0 +1,39 @@
+name: Release
+
+# Builds the Windows installer on GitHub's own Windows runner and attaches
+# it to a draft GitHub Release — no local Windows build required. Triggered
+# by pushing a version tag (vX.Y.Z), or manually via workflow_dispatch for
+# a one-off rebuild without cutting a new version.
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - uses: dtolnay/rust-toolchain@stable
+
+      - name: Install frontend dependencies
+        run: npm install
+
+      - uses: tauri-apps/tauri-action@v0
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tagName: ${{ github.ref_name }}
+          releaseName: 'AR Money Manager ${{ github.ref_name }}'
+          releaseBody: 'See CHANGELOG.md for what changed in this version.'
+          releaseDraft: true
+          prerelease: false
