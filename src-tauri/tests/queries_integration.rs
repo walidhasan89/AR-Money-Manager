@@ -759,6 +759,88 @@ async fn dashboard_summary_matches_underlying_data_exactly() {
 }
 
 #[tokio::test]
+async fn calendar_summary_zero_fills_days_and_separates_income_from_expenses() {
+    let (_dir, pool) = fresh_pool().await;
+
+    income::create(
+        &pool,
+        CreateIncomeInput {
+            amount_cents: 500_000,
+            category_id: SALARY.into(),
+            source: None,
+            date: "2026-08-01".into(),
+            note: None,
+        },
+    )
+    .await
+    .unwrap();
+    expenses::create(
+        &pool,
+        CreateExpenseInput {
+            amount_cents: 5_000,
+            category_id: GROCERIES.into(),
+            date: "2026-08-01".into(),
+            note: None,
+        },
+    )
+    .await
+    .unwrap();
+    expenses::create(
+        &pool,
+        CreateExpenseInput {
+            amount_cents: 3_000,
+            category_id: GROCERIES.into(),
+            date: "2026-08-01".into(),
+            note: None,
+        },
+    )
+    .await
+    .unwrap();
+    expenses::create(
+        &pool,
+        CreateExpenseInput {
+            amount_cents: 50_000,
+            category_id: HOUSE_RENT.into(),
+            date: "2026-08-05".into(),
+            note: None,
+        },
+    )
+    .await
+    .unwrap();
+    // Different month — must not leak into August.
+    expenses::create(
+        &pool,
+        CreateExpenseInput {
+            amount_cents: 99_000,
+            category_id: GROCERIES.into(),
+            date: "2026-07-15".into(),
+            note: None,
+        },
+    )
+    .await
+    .unwrap();
+
+    let days = dashboard::get_calendar_summary(&pool, "2026-08").await.unwrap();
+
+    assert_eq!(days.len(), 31, "August has 31 days, zero-filled");
+
+    let day1 = days.iter().find(|d| d.date == "2026-08-01").unwrap();
+    assert_eq!(day1.income_cents, 500_000);
+    assert_eq!(day1.expense_cents, 8_000, "5_000 + 3_000 combined for the day");
+
+    let day5 = days.iter().find(|d| d.date == "2026-08-05").unwrap();
+    assert_eq!(day5.income_cents, 0);
+    assert_eq!(day5.expense_cents, 50_000);
+
+    let day2 = days.iter().find(|d| d.date == "2026-08-02").unwrap();
+    assert_eq!(
+        (day2.income_cents, day2.expense_cents),
+        (0, 0),
+        "days with no activity must still appear, at zero"
+    );
+}
+
+#[tokio::test]
 async fn savings_trend_covers_trailing_months_in_order() {
     let (_dir, pool) = fresh_pool().await;
 

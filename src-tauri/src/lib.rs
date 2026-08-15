@@ -40,6 +40,7 @@ pub fn run() {
                 .build(),
         )
         .plugin(tauri_plugin_dialog::init())
+        .plugin(tauri_plugin_opener::init())
         .setup(|app| {
             if cfg!(debug_assertions) {
                 app.handle().plugin(
@@ -79,6 +80,7 @@ pub fn run() {
             commands::budgets::copy_last_month_budget,
             commands::dashboard::get_dashboard_summary,
             commands::dashboard::get_savings_trend,
+            commands::dashboard::get_calendar_summary,
             commands::goals::list_goals,
             commands::goals::list_goal_progress,
             commands::goals::create_goal,

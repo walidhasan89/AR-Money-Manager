@@ -10,6 +10,7 @@ import { deleteIncome, exportIncomeCsv, listCategories, listIncome } from '../..
 import { formatCurrency } from '../../lib/format/currency'
 import { getErrorMessage } from '../../lib/ipc/types'
 import type { Category, Income } from '../../lib/ipc/types'
+import { useDataEventsStore } from '../../store/dataEventsStore'
 import { useIncomeFilterStore } from '../../store/incomeFilterStore'
 import { useToastStore } from '../../store/toastStore'
 import { useUiStore } from '../../store/uiStore'
@@ -20,6 +21,7 @@ export function IncomeScreen() {
   const setFilter = useIncomeFilterStore((s) => s.setFilter)
   const showToast = useToastStore((s) => s.showToast)
   const openAddIncome = useUiStore((s) => s.openAddIncome)
+  const bumpIncomeVersion = useDataEventsStore((s) => s.bumpIncomeVersion)
 
   const [categories, setCategories] = useState<Category[]>([])
   const [income, setIncome] = useState<Income[]>([])
@@ -65,6 +67,7 @@ export function IncomeScreen() {
     try {
       await deleteIncome(deleting.id)
       showToast('Income deleted')
+      bumpIncomeVersion()
       setDeleting(null)
       refresh()
     } catch (error) {
@@ -91,7 +94,7 @@ export function IncomeScreen() {
         <button
           type="button"
           onClick={openAddIncome}
-          className="bg-accent-success flex items-center gap-1.5 rounded-control px-3 py-2 text-sm font-medium text-white transition-[transform] duration-100 active:scale-[0.97]"
+          className="bg-accent-success flex items-center gap-1.5 rounded-control px-3 py-2 text-sm font-medium text-black transition-[transform] duration-100 active:scale-[0.97]"
         >
           <Plus size={14} strokeWidth={1.75} /> Add Income
         </button>

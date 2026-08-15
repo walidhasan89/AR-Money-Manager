@@ -4,7 +4,9 @@ use sqlx::{Pool, Sqlite};
 
 use crate::date_utils::{days_in_month, shift_month};
 use crate::error::AppResult;
-use crate::models::{CategorySpend, DailySpend, DashboardSummary, Expense, SavingsTrendPoint};
+use crate::models::{
+    CalendarDay, CategorySpend, DailySpend, DashboardSummary, Expense, SavingsTrendPoint,
+};
 
 const EXPENSE_SELECT: &str =
     "SELECT e.id, e.amount_cents, e.category_id, c.name AS category_name, \
@@ -88,6 +90,46 @@ pub async fn get_summary(pool: &Pool<Sqlite>, month: &str) -> AppResult<Dashboar
         daily_spending,
         recent_transactions,
     })
+}
+
+/// Every day of `month`, zero-filled, with that day's total income and
+/// expense amounts — the Calendar screen's data source. Two separate
+/// grouped queries (income, expenses) merged in memory rather than a join,
+/// since joining two independently-aggregated per-date sums would multiply
+/// rows across dates that have entries in both tables.
+pub async fn get_calendar_summary(pool: &Pool<Sqlite>, month: &str) -> AppResult<Vec<CalendarDay>> {
+    let raw_expenses = sqlx::query_as::<_, (String, i64)>(
+        "SELECT date, SUM(amount_cents) FROM expenses \
+         WHERE deleted_at IS NULL AND strftime('%Y-%m', date) = ?1 \
+         GROUP BY date",
+    )
+    .bind(month)
+    .fetch_all(pool)
+    .await?;
+    let expense_map: HashMap<String, i64> = raw_expenses.into_iter().collect();
+
+    let raw_income = sqlx::query_as::<_, (String, i64)>(
+        "SELECT date, SUM(amount_cents) FROM income_entries \
+         WHERE deleted_at IS NULL AND strftime('%Y-%m', date) = ?1 \
+         GROUP BY date",
+    )
+    .bind(month)
+    .fetch_all(pool)
+    .await?;
+    let income_map: HashMap<String, i64> = raw_income.into_iter().collect();
+
+    let days = days_in_month(month)?;
+    let calendar_days = (1..=days)
+        .map(|day| {
+            let date = format!("{month}-{day:02}");
+            CalendarDay {
+                income_cents: *income_map.get(&date).unwrap_or(&0),
+                expense_cents: *expense_map.get(&date).unwrap_or(&0),
+                date,
+            }
+        })
+        .collect();
+    Ok(calendar_days)
 }
 
 /// Trailing `months` (inclusive of `month`), oldest first, for the savings

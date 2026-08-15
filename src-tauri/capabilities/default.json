@@ -3,5 +3,14 @@
   "identifier": "default",
   "description": "enables the default permissions",
   "windows": ["main"],
-  "permissions": ["core:default", "sql:allow-load", "sql:allow-close", "dialog:default"]
+  "permissions": [
+    "core:default",
+    "sql:allow-load",
+    "sql:allow-close",
+    "dialog:default",
+    {
+      "identifier": "opener:allow-open-url",
+      "allow": [{ "url": "https://walidhasan.com*" }]
+    }
+  ]
 }

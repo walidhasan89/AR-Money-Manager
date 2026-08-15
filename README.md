@@ -1,4 +1,4 @@
-# AR Personal Finance (Desktop)
+# AR Money Management (Desktop)
 
 A fast, offline, privacy-first personal finance manager for Windows. Track income, expenses, budgets, and savings goals in a local SQLite database — no account, no cloud, no telemetry, ever.
 
