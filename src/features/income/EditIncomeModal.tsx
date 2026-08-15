@@ -12,6 +12,7 @@ import { parseAmountToCents } from '../../lib/format/currency'
 import { getErrorMessage } from '../../lib/ipc/types'
 import type { Category, Income } from '../../lib/ipc/types'
 import { useEscapeToClose } from '../../lib/useEscapeToClose'
+import { useDataEventsStore } from '../../store/dataEventsStore'
 import { useToastStore } from '../../store/toastStore'
 
 const schema = z.object({
@@ -31,6 +32,7 @@ interface EditIncomeModalProps {
 
 export function EditIncomeModal({ income, onClose, onSaved }: EditIncomeModalProps) {
   const showToast = useToastStore((s) => s.showToast)
+  const bumpIncomeVersion = useDataEventsStore((s) => s.bumpIncomeVersion)
   const [categories, setCategories] = useState<Category[]>([])
 
   const {
@@ -71,6 +73,7 @@ export function EditIncomeModal({ income, onClose, onSaved }: EditIncomeModalPro
         note: values.note.trim() ? values.note.trim() : null,
       })
       showToast('Income updated')
+      bumpIncomeVersion()
       onSaved()
       onClose()
     } catch (error) {

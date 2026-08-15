@@ -232,6 +232,14 @@ pub struct DailySpend {
 
 #[derive(Debug, Clone, Serialize)]
 #[serde(rename_all = "camelCase")]
+pub struct CalendarDay {
+    pub date: String,
+    pub income_cents: i64,
+    pub expense_cents: i64,
+}
+
+#[derive(Debug, Clone, Serialize)]
+#[serde(rename_all = "camelCase")]
 pub struct DashboardSummary {
     pub month: String,
     pub income_cents: i64,

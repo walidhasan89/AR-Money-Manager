@@ -179,6 +179,12 @@ export interface DashboardSummary {
   recentTransactions: Expense[]
 }
 
+export interface CalendarDay {
+  date: string
+  incomeCents: number
+  expenseCents: number
+}
+
 export interface SavingsTrendPoint {
   month: string
   totalCents: number

@@ -13,6 +13,7 @@ import { parseAmountToCents } from '../../lib/format/currency'
 import { getErrorMessage } from '../../lib/ipc/types'
 import type { Category } from '../../lib/ipc/types'
 import { useEscapeToClose } from '../../lib/useEscapeToClose'
+import { useDataEventsStore } from '../../store/dataEventsStore'
 import { useUiStore } from '../../store/uiStore'
 import { useToastStore } from '../../store/toastStore'
 
@@ -33,6 +34,7 @@ export function AddIncomeModal() {
   const isOpen = useUiStore((s) => s.isAddIncomeOpen)
   const close = useUiStore((s) => s.closeAddIncome)
   const showToast = useToastStore((s) => s.showToast)
+  const bumpIncomeVersion = useDataEventsStore((s) => s.bumpIncomeVersion)
 
   const [categories, setCategories] = useState<Category[]>([])
 
@@ -77,6 +79,7 @@ export function AddIncomeModal() {
         note: values.note.trim() ? values.note.trim() : null,
       })
       showToast('Income added')
+      bumpIncomeVersion()
       close()
     } catch (error) {
       showToast(getErrorMessage(error), 'error')
@@ -172,7 +175,7 @@ export function AddIncomeModal() {
               <button
                 type="submit"
                 disabled={isSubmitting}
-                className="bg-accent-success mt-2 rounded-control py-2.5 text-sm font-medium text-white transition-[transform,opacity] duration-100 active:scale-[0.97] disabled:opacity-60"
+                className="bg-accent-success mt-2 rounded-control py-2.5 text-sm font-medium text-black transition-[transform,opacity] duration-100 active:scale-[0.97] disabled:opacity-60"
               >
                 Add Income
               </button>

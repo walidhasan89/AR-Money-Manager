@@ -1,6 +1,6 @@
 {
   "$schema": "https://schema.tauri.app/config/2",
-  "productName": "AR Personal Finance",
+  "productName": "AR Money Manager",
   "version": "1.0.0",
   "identifier": "com.arfinance.desktop",
   "build": {
@@ -12,7 +12,7 @@
   "app": {
     "windows": [
       {
-        "title": "AR Personal Finance",
+        "title": "AR Money Manager",
         "width": 1280,
         "height": 800,
         "minWidth": 960,

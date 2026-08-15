@@ -3,6 +3,7 @@ import type {
   BackupLogEntry,
   BackupStatus,
   BudgetSummary,
+  CalendarDay,
   Category,
   ConfirmFixedExpenseInput,
   CreateCategoryInput,
@@ -154,6 +155,10 @@ export function getDashboardSummary(month: string): Promise<DashboardSummary> {
 
 export function getSavingsTrend(month: string): Promise<SavingsTrendPoint[]> {
   return invoke<SavingsTrendPoint[]>('get_savings_trend', { month })
+}
+
+export function getCalendarSummary(month: string): Promise<CalendarDay[]> {
+  return invoke<CalendarDay[]>('get_calendar_summary', { month })
 }
 
 export function listGoals(includeArchived = false): Promise<Goal[]> {

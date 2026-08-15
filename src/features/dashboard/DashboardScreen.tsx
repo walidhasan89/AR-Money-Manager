@@ -1,10 +1,11 @@
 import { useCallback, useEffect, useState, type ReactNode } from 'react'
-import { addMonths, format, parse, subMonths } from 'date-fns'
+import { format } from 'date-fns'
 import { motion, useReducedMotion } from 'framer-motion'
 import { ChevronLeft, ChevronRight, PiggyBank, Receipt, Scale, Wallet } from 'lucide-react'
 import { GlassCard } from '../../components/GlassCard'
 import { KpiTile } from '../../components/KpiTile'
 import { getBudgetSummary, getDashboardSummary, getSavingsTrend } from '../../lib/ipc/commands'
+import { monthLabel, shiftMonth } from '../../lib/format/month'
 import { getErrorMessage } from '../../lib/ipc/types'
 import type { BudgetSummary, DashboardSummary, SavingsTrendPoint } from '../../lib/ipc/types'
 import { useDataEventsStore } from '../../store/dataEventsStore'
@@ -17,16 +18,6 @@ import { SpendingDonutChart } from './charts/SpendingDonutChart'
 import { PendingFixedExpensesWidget } from './PendingFixedExpensesWidget'
 import { RecentTransactionsPanel } from './RecentTransactionsPanel'
 
-function monthLabel(month: string): string {
-  return format(parse(month, 'yyyy-MM', new Date()), 'MMMM yyyy')
-}
-
-function shiftMonth(month: string, delta: number): string {
-  const date = parse(month, 'yyyy-MM', new Date())
-  const shifted = delta > 0 ? addMonths(date, delta) : subMonths(date, -delta)
-  return format(shifted, 'yyyy-MM')
-}
-
 interface FadeInCardProps {
   index: number
   children: ReactNode
@@ -37,6 +28,7 @@ function FadeInCard({ index, children }: FadeInCardProps) {
   const prefersReducedMotion = useReducedMotion()
   return (
     <motion.div
+      className="h-full"
       initial={prefersReducedMotion ? false : { opacity: 0, scale: 0.96 }}
       animate={{ opacity: 1, scale: 1 }}
       transition={{
@@ -54,6 +46,7 @@ export function DashboardScreen() {
   const showToast = useToastStore((s) => s.showToast)
   const expensesVersion = useDataEventsStore((s) => s.expensesVersion)
   const savingsVersion = useDataEventsStore((s) => s.savingsVersion)
+  const incomeVersion = useDataEventsStore((s) => s.incomeVersion)
   const currentMonth = format(new Date(), 'yyyy-MM')
   const [month, setMonth] = useState(currentMonth)
   const [summary, setSummary] = useState<DashboardSummary | null>(null)
@@ -73,7 +66,7 @@ export function DashboardScreen() {
 
   useEffect(() => {
     refresh()
-  }, [refresh, expensesVersion, savingsVersion])
+  }, [refresh, expensesVersion, savingsVersion, incomeVersion])
 
   const ready = summary && summary.month === month && budgetSummary && budgetSummary.month === month
 
@@ -144,13 +137,13 @@ export function DashboardScreen() {
 
           <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
             <FadeInCard index={4}>
-              <GlassCard>
+              <GlassCard className="flex h-full flex-col">
                 <h2 className="text-text-primary mb-4 font-medium">Spending by Category</h2>
                 <SpendingDonutChart data={summary.spendingByCategory} />
               </GlassCard>
             </FadeInCard>
             <FadeInCard index={5}>
-              <GlassCard>
+              <GlassCard className="flex h-full flex-col">
                 <h2 className="text-text-primary mb-4 font-medium">Daily Spending</h2>
                 <DailySpendingChart data={summary.dailySpending} />
               </GlassCard>

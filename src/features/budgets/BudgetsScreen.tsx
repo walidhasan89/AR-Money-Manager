@@ -1,6 +1,6 @@
-import { useCallback, useEffect, useState } from 'react'
-import { addMonths, format, parse, subMonths } from 'date-fns'
-import { ChevronLeft, ChevronRight, Copy } from 'lucide-react'
+import { useCallback, useEffect, useRef, useState } from 'react'
+import { format } from 'date-fns'
+import { ChevronLeft, ChevronRight, Copy, Pencil } from 'lucide-react'
 import { BudgetBar } from '../../components/BudgetBar'
 import { GlassCard } from '../../components/GlassCard'
 import {
@@ -9,21 +9,12 @@ import {
   setCategoryBudget,
   setOverallBudget,
 } from '../../lib/ipc/commands'
-import { parseAmountToCents } from '../../lib/format/currency'
+import { formatCurrency, parseAmountToCents } from '../../lib/format/currency'
+import { monthLabel, shiftMonth } from '../../lib/format/month'
 import { getErrorMessage } from '../../lib/ipc/types'
 import type { BudgetSummary } from '../../lib/ipc/types'
 import { useDataEventsStore } from '../../store/dataEventsStore'
 import { useToastStore } from '../../store/toastStore'
-
-function monthLabel(month: string): string {
-  return format(parse(month, 'yyyy-MM', new Date()), 'MMMM yyyy')
-}
-
-function shiftMonth(month: string, delta: number): string {
-  const date = parse(month, 'yyyy-MM', new Date())
-  const shifted = delta > 0 ? addMonths(date, delta) : subMonths(date, -delta)
-  return format(shifted, 'yyyy-MM')
-}
 
 interface BudgetAmountFieldProps {
   valueCents: number
@@ -31,14 +22,23 @@ interface BudgetAmountFieldProps {
 }
 
 /**
- * Local edit buffer that only needs to resync from `valueCents` when the
- * caller remounts it (via `key`) for a genuinely different budget — e.g. a
- * month change. Do not add a reset-on-prop-change effect here: that would
- * fight the user's in-progress edit every time a live update refetches the
+ * Shows the budget as bold, static text with a pencil button that swaps in
+ * an editable input — clicking straight into a plain-looking box (the old
+ * behavior) gave no visual hint the amount was editable at all. The local
+ * edit buffer only needs to resync from `valueCents` when the caller
+ * remounts it (via `key`) for a genuinely different budget — e.g. a month
+ * change. Do not add a reset-on-prop-change effect here: that would fight
+ * the user's in-progress edit every time a live update refetches the
  * summary while this field still has focus.
  */
 function BudgetAmountField({ valueCents, onSave }: BudgetAmountFieldProps) {
+  const [editing, setEditing] = useState(false)
   const [value, setValue] = useState(() => (valueCents / 100).toFixed(2))
+  const inputRef = useRef<HTMLInputElement>(null)
+
+  useEffect(() => {
+    if (editing) inputRef.current?.focus()
+  }, [editing])
 
   function commit() {
     const cents = parseAmountToCents(value)
@@ -48,20 +48,44 @@ function BudgetAmountField({ valueCents, onSave }: BudgetAmountFieldProps) {
     } else {
       setValue((valueCents / 100).toFixed(2))
     }
+    setEditing(false)
+  }
+
+  if (editing) {
+    return (
+      <input
+        ref={inputRef}
+        type="text"
+        inputMode="decimal"
+        value={value}
+        onChange={(e) => setValue(e.target.value)}
+        onBlur={commit}
+        onKeyDown={(e) => {
+          if (e.key === 'Enter') e.currentTarget.blur()
+          if (e.key === 'Escape') {
+            setValue((valueCents / 100).toFixed(2))
+            setEditing(false)
+          }
+        }}
+        className="border-glass-border focus:border-accent-primary text-text-primary w-28 rounded-control border bg-black/10 px-2 py-1 text-right text-sm font-semibold tabular-nums outline-none transition-colors"
+      />
+    )
   }
 
   return (
-    <input
-      type="text"
-      inputMode="decimal"
-      value={value}
-      onChange={(e) => setValue(e.target.value)}
-      onBlur={commit}
-      onKeyDown={(e) => {
-        if (e.key === 'Enter') e.currentTarget.blur()
-      }}
-      className="border-glass-border focus:border-accent-primary text-text-primary w-28 rounded-control border bg-black/10 px-2 py-1 text-right text-sm tabular-nums outline-none transition-colors"
-    />
+    <div className="flex items-center gap-1.5">
+      <span className="text-accent-primary text-right text-sm font-bold tabular-nums">
+        {formatCurrency(valueCents)}
+      </span>
+      <button
+        type="button"
+        onClick={() => setEditing(true)}
+        aria-label={`Edit budget amount, currently ${formatCurrency(valueCents)}`}
+        className="text-text-secondary hover:text-accent-primary shrink-0"
+      >
+        <Pencil size={14} strokeWidth={1.75} />
+      </button>
+    </div>
   )
 }
 
