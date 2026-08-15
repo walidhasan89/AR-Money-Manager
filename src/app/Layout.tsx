@@ -13,7 +13,7 @@ export function Layout() {
     <div className="flex h-screen w-screen overflow-hidden">
       <aside className="glass-card m-3 mr-0 flex w-60 shrink-0 flex-col gap-1 rounded-card p-3">
         <div className="text-text-primary px-3 pt-2 pb-4 text-sm font-semibold tracking-wide">
-          AR Money Management
+          AR Money Manager
         </div>
         <nav className="flex flex-1 flex-col gap-1">
           {navItems.map((item) => (

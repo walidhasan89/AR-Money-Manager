@@ -14,7 +14,7 @@ All notable changes to this project are documented here, following [Keep a Chang
 - Budgets: each budget amount now displays as bold, colored static text with a pencil-icon button beside it that swaps in the editable input — the previous plain always-editable box gave no visual hint it could be clicked.
 
 ### Changed
-- Renamed the app from "Personal Finance Manager" to "AR Personal Finance", then again to its final name **"AR Money Management"** (window title, `tauri.conf.json` productName, sidebar header, README) — the Tauri app identifier (`com.arfinance.desktop`) is left unchanged so existing installs/data directories aren't orphaned.
+- Renamed the app from "Personal Finance Manager" to "AR Personal Finance", then again to its final name **"AR Money Manager"** (window title, `tauri.conf.json` productName, sidebar header, README) — the Tauri app identifier (`com.arfinance.desktop`) is left unchanged so existing installs/data directories aren't orphaned.
 - Settings → Currency picker is now a custom glass-styled listbox (`CurrencySelector.tsx`) instead of a native `<select>`, matching `CommandPalette`'s look — the native control never picked up the app's design tokens for its dropdown panel.
 - Income screen and Add Income modal: the green "Add Income" button's label is now black instead of white, for better contrast against the accent-success green background.
 - Dashboard's "Spending by Category" and "Daily Spending" cards now stretch to match each other's height in their grid row, instead of "Daily Spending" leaving a visible empty gap under itself on months where the category legend wraps to more lines than the bar chart's fixed height.
