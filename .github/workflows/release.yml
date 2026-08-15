@@ -3,7 +3,10 @@ name: Release
 # Builds the Windows installer on GitHub's own Windows runner and attaches
 # it to a draft GitHub Release — no local Windows build required. Triggered
 # by pushing a version tag (vX.Y.Z), or manually via workflow_dispatch for
-# a one-off rebuild without cutting a new version.
+# a one-off rebuild without cutting a new version. The release tag/name is
+# always derived from package.json's own version rather than the trigger's
+# git ref, so a manual dispatch (which runs against a branch, not a tag)
+# still produces a correctly named release matching what was actually built.
 on:
   push:
     tags:
@@ -23,6 +26,11 @@ jobs:
         with:
           node-version: 20
 
+      - name: Read app version
+        id: version
+        shell: bash
+        run: echo "tag=v$(node -p "require('./package.json').version")" >> "$GITHUB_OUTPUT"
+
       - uses: dtolnay/rust-toolchain@stable
 
       - name: Install frontend dependencies
@@ -32,8 +40,8 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          tagName: ${{ github.ref_name }}
-          releaseName: 'AR Money Manager ${{ github.ref_name }}'
+          tagName: ${{ steps.version.outputs.tag }}
+          releaseName: 'AR Money Manager ${{ steps.version.outputs.tag }}'
           releaseBody: 'See CHANGELOG.md for what changed in this version.'
           releaseDraft: true
           prerelease: false
