@@ -1,10 +1,10 @@
 [package]
 name = "personal-finance-manager"
-version = "1.0.0"
+version = "1.1.0"
 description = "Offline-first, privacy-first personal finance manager"
 authors = ["walidhasan89"]
 license = "MIT"
-repository = "https://github.com/walidhasan89/AR-Finance"
+repository = "https://github.com/walidhasan89/AR-Money-Manager"
 edition = "2021"
 rust-version = "1.77.2"
 

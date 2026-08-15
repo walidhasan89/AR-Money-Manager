@@ -37,7 +37,7 @@ This app is local-only by design:
 
 ## Download
 
-Windows installers are published on the [Releases page](https://github.com/walidhasan89/AR-Finance/releases/latest). Installers are unsigned for now (self-published, MVP release) — Windows SmartScreen may warn on first run; this is expected and documented, not a sign of tampering.
+Windows installers are published on the [Releases page](https://github.com/walidhasan89/AR-Money-Manager/releases/latest). Installers are unsigned for now (self-published, MVP release) — Windows SmartScreen may warn on first run; this is expected and documented, not a sign of tampering.
 
 ## Tech stack
 

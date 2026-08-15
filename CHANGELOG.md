@@ -4,7 +4,12 @@ All notable changes to this project are documented here, following [Keep a Chang
 
 ## [Unreleased]
 
+## [1.1.0] - 2026-08-15
+
+Calendar tab, final app rename, and a round of UX polish on top of the 1.0.0 MVP.
+
 ### Added
+- GitHub Actions release workflow (`.github/workflows/release.yml`): builds the Windows installer on GitHub's own Windows runner and attaches it to a draft Release whenever a `vX.Y.Z` tag is pushed (or on manual `workflow_dispatch`) — no local Windows build required to publish a release.
 - Settings → Currency picker (`CurrencySelector`, `currencyStore.ts`): switches the symbol `formatCurrency()`/`AmountInput` use everywhere — display only, amounts are never converted (see `docs/product/ASSUMPTIONS.md`).
 - 25 more category icons (`lib/icons.ts`), including money/finance icons (`DollarSign`, `Banknote`, `Coins`, `CreditCard`, `PiggyBank`, `Landmark`, `HandCoins`, `BadgeDollarSign`, `Receipt`) and lifestyle icons (travel, education, fitness, pets, hobbies) — the "New Category" icon picker had noticeably too few options.
 - Sidebar: a distinct accent color per nav icon (from the same palette user categories use), and a "© Walid Hasan" footer at the bottom.
