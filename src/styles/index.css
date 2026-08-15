@@ -1,0 +1,115 @@
+@import 'tailwindcss';
+@import './tokens.css';
+
+/* Map runtime CSS custom properties (tokens.css) into Tailwind v4 theme
+   variables, so utilities like bg-bg-base, text-text-primary, border-glass-border,
+   rounded-card, backdrop-blur-glass resolve to the current theme's values. */
+@theme inline {
+  --color-bg-base: var(--bg-base);
+  --color-glass-surface: var(--glass-surface);
+  --color-glass-border: var(--glass-border);
+  --color-glass-border-hover: var(--glass-border-hover);
+  --color-glass-modal-surface: var(--glass-modal-surface);
+  --color-glass-modal-backdrop: var(--glass-modal-backdrop);
+  --color-accent-primary: var(--accent-primary);
+  --color-accent-success: var(--accent-success);
+  --color-accent-warning: var(--accent-warning);
+  --color-accent-danger: var(--accent-danger);
+  --color-text-primary: var(--text-primary);
+  --color-text-secondary: var(--text-secondary);
+
+  --radius-card: var(--radius-card);
+  --radius-control: var(--radius-control);
+
+  --blur-glass: var(--glass-blur);
+
+  --font-sans: 'Inter', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif;
+}
+
+@layer base {
+  body {
+    background-color: var(--bg-base);
+    background-image: radial-gradient(
+      circle at 50% 0%,
+      var(--bg-gradient-start),
+      var(--bg-gradient-end)
+    );
+    background-attachment: fixed;
+    color: var(--text-primary);
+    font-family: var(--font-sans);
+    min-height: 100vh;
+  }
+
+  /* Numbers are the hero: tabular figures everywhere amounts render, so
+     digits never jitter in width while counting up or updating live. */
+  .tabular-nums {
+    font-variant-numeric: tabular-nums;
+  }
+}
+
+@layer components {
+  /* Literal implementation of the .glass-card spec in DESIGN_SYSTEM.md. */
+  .glass-card {
+    background: var(--glass-surface);
+    border: 1px solid var(--glass-border);
+    backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
+    -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
+    border-radius: var(--radius-card);
+    box-shadow: var(--glass-shadow);
+    transition:
+      border-color 150ms ease-out,
+      transform 150ms ease-out,
+      box-shadow 150ms ease-out;
+  }
+
+  .glass-card:hover,
+  .glass-card:focus-within {
+    border-color: var(--glass-border-hover);
+    transform: translateY(-2px);
+    box-shadow:
+      0 12px 40px rgba(0, 0, 0, 0.28),
+      var(--glass-shadow);
+  }
+
+  /* Modal/dialog panels: same shape as .glass-card but solidly opaque (see
+     --glass-modal-surface) so content behind a modal never bleeds through,
+     regardless of backdrop-filter support/strength on the host. */
+  .glass-modal {
+    background: var(--glass-modal-surface);
+    border: 1px solid var(--glass-border);
+    border-radius: var(--radius-card);
+    box-shadow: var(--glass-shadow);
+  }
+
+  /* Dashboard ambient background (DESIGN_SYSTEM.md "Futuristic dashboard
+     layout"): a very slow, low-opacity drift, alive on close inspection but
+     effectively static at a glance. prefers-reduced-motion freezes it via
+     the app-wide rule above — no separate handling needed here. */
+  .ambient-blob {
+    position: absolute;
+    border-radius: 9999px;
+    filter: blur(60px);
+    opacity: 0.16;
+    will-change: transform;
+  }
+
+  @keyframes ambient-drift-a {
+    0%,
+    100% {
+      transform: translate(0, 0) scale(1);
+    }
+    50% {
+      transform: translate(6%, 8%) scale(1.1);
+    }
+  }
+
+  @keyframes ambient-drift-b {
+    0%,
+    100% {
+      transform: translate(0, 0) scale(1);
+    }
+    50% {
+      transform: translate(-8%, -5%) scale(1.08);
+    }
+  }
+}

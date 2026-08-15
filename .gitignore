@@ -1,7 +1,36 @@
-﻿node_modules/
+# Dependencies
+node_modules/
+
+# Frontend build output
 dist/
+dist-ssr/
+*.local
+
+# Rust / Tauri
 target/
 src-tauri/target/
+src-tauri/gen/
+
+# SQLite (dev/runtime databases — never commit real user data)
 *.sqlite
 *.sqlite-journal
+*.db
+*.db-journal
+*.db-wal
+*.db-shm
+
+# Env / secrets
 .env
+.env.*
+
+# Editor
+.vscode/*
+!.vscode/extensions.json
+.idea/
+
+# OS
+.DS_Store
+
+# Logs
+*.log
+npm-debug.log*

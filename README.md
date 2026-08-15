@@ -1,8 +1,8 @@
-# Personal Finance Manager (Desktop)
+# AR Personal Finance (Desktop)
 
-A simple, fast, privacy-first, offline-first personal finance manager for Windows desktop, built with **Tauri 2 + React + TypeScript + SQLite**.
+A fast, offline, privacy-first personal finance manager for Windows. Track income, expenses, budgets, and savings goals in a local SQLite database — no account, no cloud, no telemetry, ever.
 
-This repository is currently in the **planning/documentation phase**. No application code has been written yet. This is intentional — see `MASTER_PROMPT.md` for why.
+![Dashboard screenshot](docs/assets/dashboard-screenshot.png)
 
 ## Why this app exists
 
@@ -15,19 +15,36 @@ Answer six questions, fast, without sending your financial data anywhere:
 5. Am I overspending?
 6. Can I stay within my monthly budget?
 
-## Core principles
+## Features
 
-- **Local-first.** Your data lives in a SQLite file on your machine. No account, no cloud, no sync required.
-- **Fast daily entry.** Adding an expense should take ~10 seconds.
-- **Simple over feature-rich.** Every feature must solve a real money-management problem.
-- **Beautiful but not bloated.** A modern glass/futuristic dashboard aesthetic with smooth animation — but it never gets in the way of speed.
+- **Quick Add Expense** (`Ctrl+E`) — a near-instant capture flow, designed to take about 10 seconds.
+- **Income, expenses, and fixed/recurring expenses** with search, filtering, and CSV export.
+- **Budgets** — overall and per-category monthly budgets with live budget-vs-actual and overspending warnings.
+- **Dashboard** — an animated glass-effect view of income, expenses, savings, spending by category, daily spending, and budget status.
+- **Savings & goals** — general savings, DPS, emergency fund, and custom goals with progress tracking.
+- **Reports** — a monthly summary that always matches the dashboard, plus structured CSV export.
+- **Backup & restore** — one-click manual backups, automatic safety copies before every restore and schema migration, and a stale-backup reminder.
+- **Keyboard-first** — a `Ctrl+K` command palette, a full shortcut set, and every flow completable without a mouse.
+- **Dark, light, or system theme.**
+
+## Privacy
+
+This app is local-only by design:
+
+- Your data lives in a single SQLite file on your own machine — there is no account, no server, and no sync.
+- No network calls anywhere in the app. No telemetry, analytics, or crash reporting, ever.
+- Backups, exports, and imports only ever touch paths you explicitly pick via a native file dialog.
+
+## Download
+
+Windows installers are published on the [Releases page](https://github.com/walidhasan89/AR-Finance/releases/latest). Installers are unsigned for now (self-published, MVP release) — Windows SmartScreen may warn on first run; this is expected and documented, not a sign of tampering.
 
 ## Tech stack
 
 | Layer | Choice |
 |---|---|
 | Shell | Tauri 2 (Rust) |
-| UI | React 18 + TypeScript |
+| UI | React 18 + TypeScript (strict) |
 | Styling | Tailwind CSS |
 | Charts | Recharts |
 | Animation | Framer Motion |
@@ -37,21 +54,46 @@ Answer six questions, fast, without sending your financial data anywhere:
 
 See `docs/architecture/ARCHITECTURE.md` for the full rationale.
 
+## Building from source
+
+Requirements: Node.js 20+, Rust (stable, via `rustup`), and the [Tauri prerequisites](https://tauri.app/start/prerequisites/) for your OS.
+
+```bash
+npm install
+npm run tauri dev    # run in development
+npm run tauri build  # produce a release build/installer for your platform
+```
+
+Frontend-only checks:
+
+```bash
+npm run lint
+npm run format:check
+npm run test
+```
+
+Rust checks (from `src-tauri/`):
+
+```bash
+cargo fmt --check
+cargo clippy --all-targets -- -D warnings
+cargo test
+```
+
 ## Where to start reading
 
 | If you want to... | Read |
 |---|---|
 | Understand the product | `docs/product/PRD.md` |
-| Give Claude Code full context in one shot | `MASTER_PROMPT.md` |
-| Set persistent rules for Claude Code in this repo | `CLAUDE.md` |
-| See what gets built, in what order | `ROADMAP.md` and `docs/phases/` |
+| See what shipped, in what order | `ROADMAP.md` and `docs/phases/` |
 | Understand the database | `docs/database/SCHEMA.md` |
 | Understand the visual design language | `docs/ui-ux/DESIGN_SYSTEM.md` |
+| Contribute | `CONTRIBUTING.md` |
 
 ## Project status
 
-📋 **Phase 0 — Product Planning** (this documentation set)
+✅ **v1.0.0 — MVP complete** (Phases 1–8): daily-driveable, offline, private, with the full intended feature set and visual polish.
 
 ## License
 
-TBD by owner before public release (see `docs/release/RELEASE_PROCESS.md`).
+[MIT](LICENSE)

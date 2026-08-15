@@ -21,6 +21,7 @@ Documentation only — **not implemented yet**. This is the target schema for Ph
 | icon | TEXT | icon identifier for UI |
 | color | TEXT | hex, used for charts |
 | is_system | INTEGER | 1 = seeded default, 0 = user-created |
+| is_archived | INTEGER | 1 = hidden from pickers but kept for historical entries, 0 = active. Added in `002_category_archive.sql` (Phase 2) for Settings category management's "archive" action — archiving is preferred over deleting so existing expense/income rows never lose their category. |
 | created_at | TEXT | |
 
 Seeded defaults (expense): Groceries, House Rent, Utilities (WiFi/Gas/Electricity), Transport, Mobile, Subscriptions, Family Support, Employees, Business, Health, Dining, Shopping, Entertainment, Other.
@@ -60,6 +61,16 @@ Indexes: `(date)`, `(category_id)`, `(fixed_expense_id)`.
 | day_of_month | INTEGER | 1–28, when it becomes due |
 | is_active | INTEGER | 1/0, pause without deleting |
 | created_at, updated_at | TEXT | |
+
+### `fixed_expense_skips`
+| Column | Type | Notes |
+|---|---|---|
+| id | TEXT PK | |
+| fixed_expense_id | TEXT FK → fixed_expenses | |
+| month | TEXT | `YYYY-MM` the user chose to skip |
+| created_at | TEXT | |
+
+Unique constraint: `(fixed_expense_id, month)`. Added in `003_fixed_expense_skips.sql` (Phase 2). Records an explicit "skip" of a fixed expense's monthly pending item so it stops resurfacing on the dashboard that month, without posting a real `expenses` row — the pending-calculation for a given month excludes any `fixed_expense_id` that already has either a matching `expenses` row (confirmed) or a matching skip (dismissed).
 
 ### `savings_entries`
 | Column | Type | Notes |

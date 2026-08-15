@@ -1,0 +1,91 @@
+/*
+ * Design tokens — "Glass Ledger" visual language.
+ * Source of truth: docs/ui-ux/DESIGN_SYSTEM.md (binding spec).
+ * Gaps not covered by that doc are filled per docs/product/ASSUMPTIONS.md #18-20.
+ */
+
+:root {
+  /* Tells the engine to paint native widgets (select chrome + its option
+     list, scrollbars) dark instead of the OS/browser light default — without
+     this, <select> renders as a near-white box with pale text regardless of
+     our own text/background classes, since those don't reach native chrome. */
+  color-scheme: dark;
+
+  /* Background */
+  --bg-base: #0a0e17;
+  --bg-gradient-start: #101828;
+  --bg-gradient-end: #0a0e17;
+
+  /* Glass surface */
+  --glass-surface: rgba(255, 255, 255, 0.06);
+  --glass-surface-fallback: rgba(255, 255, 255, 0.14);
+  --glass-border: rgba(255, 255, 255, 0.12);
+  --glass-border-hover: rgba(255, 255, 255, 0.24);
+  --glass-blur: 20px;
+  --glass-saturate: 140%;
+  --glass-shadow: 0 8px 32px rgba(0, 0, 0, 0.24);
+
+  /* Modal surface: deliberately much less translucent than --glass-surface.
+     Modals sit over dense foreground content (forms, tables), not the mostly
+     empty ambient background dashboard cards float over, so they need to
+     read as solidly opaque even when backdrop-filter is weak/unsupported
+     (observed on Windows WebView2) — see docs/product/ASSUMPTIONS.md. */
+  --glass-modal-surface: rgba(13, 17, 28, 0.96);
+  --glass-modal-backdrop: rgba(0, 0, 0, 0.6);
+
+  /* Accent */
+  --accent-primary: #6c7cff;
+  --accent-success: #3ddc97;
+  --accent-warning: #ffb648;
+  --accent-danger: #ff5c7a;
+
+  /* Text */
+  --text-primary: #f5f7ff;
+  --text-secondary: rgba(245, 247, 255, 0.6);
+
+  /* Radius */
+  --radius-card: 20px;
+  --radius-control: 12px;
+}
+
+[data-theme='light'] {
+  color-scheme: light;
+
+  --bg-base: #f4f5fa;
+  --bg-gradient-start: #ffffff;
+  --bg-gradient-end: #f4f5fa;
+
+  --glass-surface: rgba(255, 255, 255, 0.7);
+  --glass-surface-fallback: rgba(255, 255, 255, 0.92);
+  --glass-border: rgba(10, 14, 23, 0.08);
+  --glass-border-hover: rgba(10, 14, 23, 0.16);
+  --glass-shadow: 0 8px 24px rgba(10, 14, 23, 0.1);
+
+  --glass-modal-surface: rgba(255, 255, 255, 0.97);
+  --glass-modal-backdrop: rgba(10, 14, 23, 0.45);
+
+  --text-primary: #0a0e17;
+  --text-secondary: rgba(10, 14, 23, 0.6);
+}
+
+/* Respect the OS reduced-motion preference app-wide; components should also
+   check this via the useReducedMotion hook for JS-driven (Framer Motion) animation. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* Backdrop-filter fallback: browsers/drivers without support fall back to a
+   higher-opacity solid surface instead of blur, per DESIGN_SYSTEM.md's
+   accessibility guardrails. */
+@supports not (backdrop-filter: blur(1px)) {
+  .glass-card {
+    background: var(--glass-surface-fallback);
+  }
+}
