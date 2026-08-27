@@ -85,6 +85,15 @@ export function CurrencySelector() {
                     role="option"
                     aria-selected={isSelected}
                     onClick={() => choose(option.code)}
+                    onKeyDown={(e) => {
+                      // Some WebView engines don't fire click-on-Enter for
+                      // non-submit buttons — handle it explicitly (see
+                      // CategoryPicker.tsx for the same fix + rationale).
+                      if (e.key === 'Enter') {
+                        e.preventDefault()
+                        choose(option.code)
+                      }
+                    }}
                     className={`flex w-full items-center justify-between gap-2 rounded-control px-3 py-2 text-left text-sm transition-colors ${
                       isSelected
                         ? 'bg-accent-primary/15 text-text-primary'

@@ -43,6 +43,16 @@ export function CategoryPicker({ categories, value, onChange, error }: CategoryP
               role="option"
               aria-selected={selected}
               onClick={() => onChange(category.id)}
+              onKeyDown={(e) => {
+                // Some WebView engines don't fire the native click-on-Enter
+                // activation for non-submit buttons (confirmed via manual
+                // testing) — handle it explicitly so tabbing to a category
+                // chip and pressing Enter reliably selects it everywhere.
+                if (e.key === 'Enter') {
+                  e.preventDefault()
+                  onChange(category.id)
+                }
+              }}
               className={`flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-sm transition-colors ${
                 selected
                   ? 'border-accent-primary bg-accent-primary/15 text-text-primary'
