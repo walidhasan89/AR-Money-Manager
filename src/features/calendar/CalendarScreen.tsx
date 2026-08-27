@@ -10,6 +10,7 @@ import { getErrorMessage } from '../../lib/ipc/types'
 import type { CalendarDay } from '../../lib/ipc/types'
 import { useDataEventsStore } from '../../store/dataEventsStore'
 import { useToastStore } from '../../store/toastStore'
+import { DayDetailModal } from './DayDetailModal'
 
 const WEEKDAY_LABELS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
 
@@ -21,6 +22,7 @@ export function CalendarScreen() {
   const today = format(new Date(), 'yyyy-MM-dd')
   const [month, setMonth] = useState(currentMonth)
   const [days, setDays] = useState<CalendarDay[] | null>(null)
+  const [selectedDate, setSelectedDate] = useState<string | null>(null)
 
   const refresh = useCallback(() => {
     getCalendarSummary(month)
@@ -86,8 +88,8 @@ export function CalendarScreen() {
             </div>
 
             {/* Fixed-height rows sized to fit a 6-week month with no page
-                scroll (found via manual testing — the previous min-h-24
-                cells overflowed on 6-row months). */}
+                scroll (found via manual testing — min-h-24 cells overflowed
+                on 6-row months; h-20 is the tallest that still fits). */}
             <div className="grid grid-cols-7 gap-1">
               {WEEKDAY_LABELS.map((label) => (
                 <div
@@ -105,9 +107,12 @@ export function CalendarScreen() {
                 const isToday = day.date === today
                 const hasEntries = day.incomeCents > 0 || day.expenseCents > 0
                 return (
-                  <div
+                  <button
                     key={day.date}
-                    className={`border-glass-border flex h-16 flex-col gap-0.5 rounded-control border p-1 transition-colors ${
+                    type="button"
+                    onClick={() => setSelectedDate(day.date)}
+                    aria-label={`View activity on ${day.date}`}
+                    className={`border-glass-border hover:border-glass-border-hover flex h-20 flex-col gap-0.5 rounded-control border p-1 text-left transition-colors ${
                       isToday
                         ? 'border-accent-primary bg-accent-primary/10'
                         : hasEntries
@@ -132,13 +137,15 @@ export function CalendarScreen() {
                         -{formatCurrency(day.expenseCents)}
                       </span>
                     )}
-                  </div>
+                  </button>
                 )
               })}
             </div>
           </div>
         )}
       </GlassCard>
+
+      <DayDetailModal date={selectedDate} onClose={() => setSelectedDate(null)} />
     </div>
   )
 }

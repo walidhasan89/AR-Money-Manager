@@ -4,6 +4,15 @@ All notable changes to this project are documented here, following [Keep a Chang
 
 ## [Unreleased]
 
+### Added
+- Calendar: day cells are now clickable, opening a popup with that day's full income/expense breakdown (category icon, name, note, amount) — or "No income or expenses on this day." when empty. Reuses the same filtered `listExpenses`/`listIncome` commands the Expenses/Income screens use (`dateFrom === dateTo` scopes to one day), no new backend command needed.
+
+### Changed
+- Calendar's day cells are a bit taller (`h-16` → `h-20`) for more breathing room — still fits a full 6-row month with no page scroll.
+
+### Fixed
+- Category chip buttons (Quick Add Expense, Add/Edit Income, Add/Edit Expense) and the Currency dropdown's option buttons didn't respond to Enter when focused via keyboard — only `type="submit"` buttons did. Some WebView engines don't fire the native click-on-Enter activation for plain `type="button"` elements; both now handle it explicitly.
+
 ## [1.1.0] - 2026-08-15
 
 Calendar tab, final app rename, and a round of UX polish on top of the 1.0.0 MVP.
