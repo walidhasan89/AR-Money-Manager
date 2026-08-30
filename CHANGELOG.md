@@ -4,6 +4,8 @@ All notable changes to this project are documented here, following [Keep a Chang
 
 ## [Unreleased]
 
+## [1.2.0] - 2026-08-30
+
 ### Added
 - Calendar: day cells are now clickable, opening a popup with that day's full income/expense breakdown (category icon, name, note, amount) — or "No income or expenses on this day." when empty. Reuses the same filtered `listExpenses`/`listIncome` commands the Expenses/Income screens use (`dateFrom === dateTo` scopes to one day), no new backend command needed.
 
